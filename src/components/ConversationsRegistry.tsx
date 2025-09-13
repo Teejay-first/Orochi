@@ -54,12 +54,12 @@ export const ConversationsRegistry: React.FC = () => {
         .from('conversations')
         .select(`
           *,
-          profiles (
+          profiles!conversations_user_id_fkey (
             full_name,
             email,
             avatar_url
           ),
-          agents (
+          agents!conversations_agent_id_fkey (
             name,
             avatar_url
           )
@@ -72,8 +72,8 @@ export const ConversationsRegistry: React.FC = () => {
         ...conv,
         status: conv.status as 'active' | 'completed' | 'ended',
         transcript: Array.isArray(conv.transcript) ? conv.transcript : [],
-        profiles: conv.profiles || null,
-        agents: conv.agents || null
+        profiles: Array.isArray(conv.profiles) ? conv.profiles[0] || null : conv.profiles || null,
+        agents: Array.isArray(conv.agents) ? conv.agents[0] || null : conv.agents || null
       }));
       
       setConversations(typedConversations);
@@ -81,7 +81,7 @@ export const ConversationsRegistry: React.FC = () => {
       console.error('Error fetching conversations:', error);
       toast({
         title: "Error",
-        description: "Failed to load conversations",
+        description: "Failed to load conversations. Please make sure you have admin privileges.",
         variant: "destructive",
       });
     } finally {

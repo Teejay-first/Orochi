@@ -113,6 +113,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          role: string | null
           updated_at: string
           user_id: string
         }
@@ -122,6 +123,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id?: string
+          role?: string | null
           updated_at?: string
           user_id: string
         }
@@ -131,6 +133,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          role?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -141,7 +144,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin_user: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
+      is_super_admin_user: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
