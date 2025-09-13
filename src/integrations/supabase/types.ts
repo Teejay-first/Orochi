@@ -179,6 +179,10 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: boolean
       }
+      use_invite_code: {
+        Args: { code_to_use: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
