@@ -70,51 +70,38 @@ export const useAuth = () => {
 
   const signInWithInviteCode = async (inviteCode: string) => {
     try {
-      // First, check if the invite code exists and has uses remaining
-      const { data: codeData, error: fetchError } = await supabase
-        .from('invite_codes')
-        .select('id, uses_remaining')
-        .eq('code', inviteCode.trim().toUpperCase())
-        .single();
+      // Use RPC function to atomically validate and consume the invite code
+      const { data: result, error: rpcError } = await supabase.rpc('use_invite_code', {
+        code_to_use: inviteCode.trim()
+      });
 
-      if (fetchError || !codeData) {
-        return { error: { message: 'Invalid invite code' } };
+      if (rpcError) {
+        console.error('RPC Error:', rpcError);
+        return { error: { message: 'Failed to validate invite code' } };
       }
 
-      if (codeData.uses_remaining <= 0) {
-        return { error: { message: 'This invite code has been used up' } };
+      // Cast the result to the expected type
+      const inviteResult = result as { success: boolean; message: string } | null;
+
+      // Check if the invite code validation was successful
+      if (!inviteResult?.success) {
+        return { error: { message: inviteResult?.message || 'Invalid invite code' } };
       }
 
-      // Create a temporary user session using email/password with invite code as identifier
-      const tempEmail = `invite_${inviteCode.trim().toLowerCase()}@example.com`;
-      const tempPassword = `temp_${Date.now()}_${Math.random()}`;
-      const redirectUrl = `${window.location.origin}/`;
-
-      // Sign up with temporary credentials
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: tempEmail,
-        password: tempPassword,
+      // Create an anonymous authenticated session
+      const { data: authData, error: authError } = await supabase.auth.signInAnonymously({
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             invite_code: inviteCode.trim().toUpperCase(),
-            full_name: 'Invite User'
+            full_name: 'Invite User',
+            auth_method: 'invite_code'
           }
         }
       });
 
       if (authError) {
-        return { error: authError };
-      }
-
-      // Decrease the usage count
-      const { error: updateError } = await supabase
-        .from('invite_codes')
-        .update({ uses_remaining: codeData.uses_remaining - 1 })
-        .eq('id', codeData.id);
-
-      if (updateError) {
-        console.error('Failed to update invite code usage:', updateError);
+        console.error('Auth Error:', authError);
+        return { error: { message: 'Failed to create session' } };
       }
 
       toast({
@@ -124,6 +111,7 @@ export const useAuth = () => {
 
       return { error: null };
     } catch (error: any) {
+      console.error('Invite code error:', error);
       return { error: { message: error.message || 'Failed to process invite code' } };
     }
   };
