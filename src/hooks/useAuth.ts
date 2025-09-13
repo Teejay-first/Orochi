@@ -50,8 +50,8 @@ export const useAuth = () => {
     }
 
     if (data?.url) {
-      // Ensure top-level navigation (works inside iframes)
-      (window.top ?? window).location.href = data.url;
+      // Open in new tab since iframe blocks top navigation
+      window.open(data.url, '_blank', 'noopener,noreferrer');
     }
 
     return { error: null };
