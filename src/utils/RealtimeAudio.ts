@@ -13,6 +13,9 @@ export class RealtimeChat {
   private dc: RTCDataChannel | null = null;
   private audioEl: HTMLAudioElement | null = null;
   private localStream: MediaStream | null = null;
+  private sessionInstructions?: string;
+  private sessionPromptId?: string;
+  private sessionModel: string = 'gpt-realtime-2025-08-28';
 
   constructor(
     private onMessage: (message: RealtimeMessage) => void,
@@ -23,15 +26,19 @@ export class RealtimeChat {
     document.body.appendChild(this.audioEl);
   }
 
-  async init(agentVoice: string, instructions: string) {
+  async init(agentVoice: string, options?: { instructions?: string; promptId?: string; model?: string }) {
     try {
       this.onStatusChange('connecting');
+      // Persist session options for later session.update
+      this.sessionInstructions = options?.instructions;
+      this.sessionPromptId = options?.promptId;
+      if (options?.model) this.sessionModel = options.model;
       
       // Get ephemeral token from our Supabase Edge Function
       const { data: tokenData, error } = await supabase.functions.invoke("realtime-token", {
-        body: { 
+        body: {
           voice: agentVoice,
-          instructions: instructions
+          instructions: options?.instructions
         }
       });
 
@@ -92,8 +99,8 @@ export class RealtimeChat {
       await this.pc.setLocalDescription(offer);
 
       // Connect to OpenAI's Realtime API
-      const baseUrl = "https://api.openai.com/v1/realtime/calls";
-      const model = "gpt-4o-realtime-preview-2024-12-17";
+      const baseUrl = "https://api.openai.com/v1/realtime";
+      const model = encodeURIComponent(this.sessionModel);
       
       console.log("Connecting to OpenAI Realtime API...");
       const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
@@ -108,7 +115,7 @@ export class RealtimeChat {
       if (!sdpResponse.ok) {
         const errorText = await sdpResponse.text();
         console.error("SDP response error:", errorText);
-        throw new Error(`Failed to connect to OpenAI: ${sdpResponse.status}`);
+        throw new Error(`SDP failed: ${sdpResponse.status} ${errorText}`);
       }
 
       const answer = {
@@ -128,6 +135,25 @@ export class RealtimeChat {
 
   private handleRealtimeEvent(event: any) {
     switch (event.type) {
+      case 'session.created': {
+        console.log('Session created event received');
+        if (this.dc) {
+          if (this.sessionPromptId) {
+            this.dc.send(JSON.stringify({
+              type: 'session.update',
+              session: { prompt: { id: this.sessionPromptId } }
+            }));
+            console.log('Applied hosted prompt via session.update:', this.sessionPromptId);
+          } else if (this.sessionInstructions) {
+            this.dc.send(JSON.stringify({
+              type: 'session.update',
+              session: { instructions: this.sessionInstructions }
+            }));
+            console.log('Applied instructions via session.update');
+          }
+        }
+        break;
+      }
       case 'conversation.item.created':
         if (event.item?.content?.[0]?.text) {
           this.onMessage({
@@ -138,7 +164,7 @@ export class RealtimeChat {
           });
         }
         break;
-        
+      
       case 'response.text.delta':
         // Handle streaming text responses
         this.onMessage({

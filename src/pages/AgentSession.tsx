@@ -86,7 +86,7 @@ export const AgentSession: React.FC = () => {
         setSessionStatus
       );
       
-      await realtimeChatRef.current.init(selectedVoice, instructions);
+      await realtimeChatRef.current.init(selectedVoice, { instructions, promptId: agent.prompt_id, model: agent.model || 'gpt-realtime-2025-08-28' });
       
       toast({
         title: "Connected",
@@ -290,7 +290,7 @@ export const AgentSession: React.FC = () => {
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Model</label>
-              <Input value="GPT-Realtime" disabled />
+              <Input value={agent.model || 'gpt-realtime-2025-08-28'} disabled />
             </div>
             
             <div>
