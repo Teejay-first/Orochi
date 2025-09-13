@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,10 +11,13 @@ import { Turnstile } from '@marsidev/react-turnstile';
 
 export const Auth: React.FC = () => {
   const { signInWithGoogle, signInWithInviteCode, isAuthenticated, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   const [inviteCode, setInviteCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string>('');
   const captchaRef = useRef<any>();
+  
+  const redirectTo = searchParams.get('redirect') || '/';
 
   if (loading) {
     return (
@@ -25,7 +28,7 @@ export const Auth: React.FC = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   const handleGoogleSignIn = async () => {
