@@ -19,7 +19,7 @@ type SessionStatus = 'idle' | 'connecting' | 'connected' | 'ended';
 export const AgentSession: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { agents } = useAgents();
+  const { agents, loading } = useAgents();
   const { user, isAuthenticated } = useAuth();
   
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -38,23 +38,21 @@ export const AgentSession: React.FC = () => {
   const conversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const foundAgent = agents.find(a => a.id === id);
-      if (foundAgent) {
-        setAgent(foundAgent);
-        setSelectedVoice(foundAgent.voice || 'alloy');
-      } else {
-        navigate('/');
-        return;
-      }
-    }
-  }, [id, agents, navigate]);
-
-  useEffect(() => {
-    if (!agent) {
+    if (loading || !id) return;
+    
+    const foundAgent = agents.find(a => a.id === id);
+    if (foundAgent) {
+      setAgent(foundAgent);
+      setSelectedVoice(foundAgent.voice || 'alloy');
+    } else {
+      // Agent not found after loading is complete
       navigate('/');
       return;
     }
+  }, [id, agents, loading, navigate]);
+
+  useEffect(() => {
+    if (!agent || loading) return;
     
     // Add welcome message
     setMessages([{
@@ -206,8 +204,32 @@ export const AgentSession: React.FC = () => {
     }
   };
 
-  if (!agent) {
-    return null;
+  // Show loading state while agents are loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading agent...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show agent not found after loading is complete
+  if (!loading && !agent) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-4">Agent Not Found</h2>
+          <p className="text-muted-foreground mb-6">The agent you're looking for doesn't exist.</p>
+          <Button onClick={() => navigate('/')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
