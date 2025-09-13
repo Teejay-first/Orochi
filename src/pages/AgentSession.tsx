@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAgents } from '@/contexts/AgentContext';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { ArrowLeft, Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 import { VOICES } from '@/types/agent';
+import { RealtimeChat, RealtimeMessage } from '@/utils/RealtimeAudio';
+import { useToast } from '@/components/ui/use-toast';
 
 export const AgentSession: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +19,9 @@ export const AgentSession: React.FC = () => {
   
   const agent = agents.find(a => a.id === id);
   
+  const { toast } = useToast();
+  const realtimeChatRef = useRef<RealtimeChat | null>(null);
+  
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'connecting' | 'connected' | 'ended'>('idle');
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
@@ -24,13 +29,7 @@ export const AgentSession: React.FC = () => {
   const [selectedVoice, setSelectedVoice] = useState(agent?.voice || 'alloy');
   const [latencyTarget, setLatencyTarget] = useState([200]);
   const [maxDuration, setMaxDuration] = useState([300]);
-  const [messages, setMessages] = useState<Array<{
-    id: string;
-    type: 'user' | 'agent' | 'system';
-    content: string;
-    timestamp: number;
-    isPartial?: boolean;
-  }>>([]);
+  const [messages, setMessages] = useState<RealtimeMessage[]>([]);
 
   useEffect(() => {
     if (!agent) {
@@ -42,28 +41,75 @@ export const AgentSession: React.FC = () => {
     setMessages([{
       id: '1',
       type: 'system',
-      content: `Connected to ${agent.name}. Click "Start Session" to begin voice conversation.`,
+      content: `Ready to connect to ${agent.name}. Click "Start Session" to begin voice conversation.`,
       timestamp: Date.now(),
     }]);
+    
+    // Cleanup on unmount
+    return () => {
+      if (realtimeChatRef.current) {
+        realtimeChatRef.current.disconnect();
+      }
+    };
   }, [agent, navigate]);
 
   const handleStartSession = async () => {
-    setSessionStatus('connecting');
+    if (!agent) return;
     
-    // Simulate connection process
-    setTimeout(() => {
-      setSessionStatus('connected');
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        type: 'agent',
-        content: `Hello! I'm ${agent?.name}. How can I help you today?`,
-        timestamp: Date.now(),
-      }]);
-    }, 2000);
+    try {
+      // Request microphone permission first
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Prepare instructions based on agent configuration
+      let instructions = "You are a helpful assistant.";
+      
+      if (agent.prompt_source === 'text' && agent.prompt_text) {
+        instructions = agent.prompt_text;
+      } else if (agent.prompt_source === 'prompt_id' && agent.prompt_id) {
+        instructions = `Use prompt ID: ${agent.prompt_id}. You are ${agent.name}, ${agent.tagline}`;
+      }
+      
+      // Initialize realtime chat
+      realtimeChatRef.current = new RealtimeChat(
+        (message) => {
+          setMessages(prev => {
+            // Handle partial messages by updating the last message if it has the same ID
+            if (message.isPartial) {
+              const lastMessage = prev[prev.length - 1];
+              if (lastMessage && lastMessage.id === message.id && lastMessage.isPartial) {
+                return [...prev.slice(0, -1), message];
+              }
+            }
+            return [...prev, message];
+          });
+        },
+        setSessionStatus
+      );
+      
+      await realtimeChatRef.current.init(selectedVoice, instructions);
+      
+      toast({
+        title: "Connected",
+        description: `Voice session with ${agent.name} started successfully`,
+      });
+      
+    } catch (error) {
+      console.error('Error starting session:', error);
+      setSessionStatus('ended');
+      
+      toast({
+        title: "Connection Failed", 
+        description: error instanceof Error ? error.message : 'Failed to start voice session',
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEndSession = () => {
-    setSessionStatus('ended');
+    if (realtimeChatRef.current) {
+      realtimeChatRef.current.disconnect();
+    }
+    
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
       type: 'system',
@@ -72,28 +118,20 @@ export const AgentSession: React.FC = () => {
     }]);
   };
 
-  const handleSendText = () => {
-    if (!textInput.trim()) return;
+  const handleSendText = async () => {
+    if (!textInput.trim() || !realtimeChatRef.current) return;
     
-    const userMessage = {
-      id: Date.now().toString(),
-      type: 'user' as const,
-      content: textInput,
-      timestamp: Date.now(),
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setTextInput('');
-    
-    // Simulate agent response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        type: 'agent',
-        content: `I received your message: "${userMessage.content}". This is a demo response.`,
-        timestamp: Date.now(),
-      }]);
-    }, 1000);
+    try {
+      await realtimeChatRef.current.sendTextMessage(textInput);
+      setTextInput('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Send Failed",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!agent) {
