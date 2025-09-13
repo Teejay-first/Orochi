@@ -31,12 +31,13 @@ export const useAuth = () => {
 
   const signInWithGoogle = async () => {
     const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signInWithOAuth({
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl
-      }
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+      },
     });
 
     if (error) {
@@ -48,9 +49,13 @@ export const useAuth = () => {
       return { error };
     }
 
+    if (data?.url) {
+      // Ensure top-level navigation (works inside iframes)
+      (window.top ?? window).location.href = data.url;
+    }
+
     return { error: null };
   };
-
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
