@@ -138,8 +138,25 @@ export const Admin: React.FC = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}?`)) {
+    const superAdminPassword = prompt(
+      `⚠️ Agent deletion requires super admin authorization.\n\nEnter super admin password to delete "${name}":`
+    );
+    
+    if (superAdminPassword !== 'adminx1') {
+      toast({
+        title: "Access Denied",
+        description: "Invalid super admin password. Agent deletion cancelled.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (confirm(`🚨 FINAL CONFIRMATION: Delete "${name}" permanently?`)) {
       await deleteAgent(id);
+      toast({
+        title: "Agent Deleted",
+        description: `"${name}" has been permanently deleted.`,
+      });
     }
   };
 
