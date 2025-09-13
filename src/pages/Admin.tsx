@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Agent, CATEGORIES, LANGUAGES, VOICES } from '@/types/agent';
-import { useAgents } from '@/contexts/AgentContext'; 
+import { useAgents } from '@/contexts/AgentContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +18,8 @@ import { ConversationsRegistry } from '@/components/ConversationsRegistry';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Admin: React.FC = () => {
-  const { agents, addAgent, updateAgent, deleteAgent, exportAgents, importAgents } = useAgents();
+  const navigate = useNavigate();
+  const { agents, addAgent, updateAgent, deleteAgent, duplicateAgent, exportAgents, importAgents } = useAgents();
   const { signOut } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMasterAdmin, setIsMasterAdmin] = useState(false);
@@ -275,7 +277,7 @@ export const Admin: React.FC = () => {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = '.json';
-                input.onchange = handleImport;
+                input.onchange = handleImport as any;
                 input.click();
               }}
             >

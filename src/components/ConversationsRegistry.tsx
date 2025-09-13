@@ -54,12 +54,12 @@ export const ConversationsRegistry: React.FC = () => {
         .from('conversations')
         .select(`
           *,
-          profiles!inner (
+          profiles (
             full_name,
             email,
             avatar_url
           ),
-          agents!inner (
+          agents (
             name,
             avatar_url
           )
@@ -71,7 +71,9 @@ export const ConversationsRegistry: React.FC = () => {
       const typedConversations = (data || []).map(conv => ({
         ...conv,
         status: conv.status as 'active' | 'completed' | 'ended',
-        transcript: Array.isArray(conv.transcript) ? conv.transcript : []
+        transcript: Array.isArray(conv.transcript) ? conv.transcript : [],
+        profiles: conv.profiles || null,
+        agents: conv.agents || null
       }));
       
       setConversations(typedConversations);

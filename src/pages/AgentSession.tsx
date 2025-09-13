@@ -1,32 +1,54 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Agent, SessionMessage, VoiceSession } from '@/types/agent';
+import { Agent, SessionMessage, VoiceSession, VOICES } from '@/types/agent';
 import { useAgents } from '@/contexts/AgentContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
-import { RealtimeAudio } from '@/utils/RealtimeAudio';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from 'lucide-react';
+import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
+type SessionStatus = 'idle' | 'connecting' | 'connected' | 'ended';
+
 export const AgentSession: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getAgentById } = useAgents();
+  const { agents } = useAgents();
   const { user, isAuthenticated } = useAuth();
   
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [session, setSession] = useState<VoiceSession | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<SessionStatus>('idle');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
   const [messages, setMessages] = useState<SessionMessage[]>([]);
+  const [textInput, setTextInput] = useState('');
+  const [selectedVoice, setSelectedVoice] = useState('alloy');
+  const [latencyTarget, setLatencyTarget] = useState([200]);
+  const [maxDuration, setMaxDuration] = useState([300]);
   
-  const realtimeAudioRef = useRef<RealtimeAudio | null>(null);
+  const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const conversationIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (id) {
+      const foundAgent = agents.find(a => a.id === id);
+      if (foundAgent) {
+        setAgent(foundAgent);
+        setSelectedVoice(foundAgent.voice || 'alloy');
+      } else {
+        navigate('/');
+        return;
+      }
+    }
+  }, [id, agents, navigate]);
 
   useEffect(() => {
     if (!agent) {
@@ -50,10 +72,57 @@ export const AgentSession: React.FC = () => {
     };
   }, [agent, navigate]);
 
+  const createConversationRecord = async () => {
+    if (!user || !agent) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: user.id,
+          agent_id: agent.id,
+          status: 'active',
+          transcript: []
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data.id;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      return null;
+    }
+  };
+
+  const updateConversationStatus = async (status: 'active' | 'completed' | 'ended') => {
+    if (!conversationIdRef.current) return;
+
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .update({
+          status,
+          ended_at: status !== 'active' ? new Date().toISOString() : null
+        })
+        .eq('id', conversationIdRef.current);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating conversation:', error);
+    }
+  };
+
   const handleStartSession = async () => {
     if (!agent) return;
     
     try {
+      // Create conversation record
+      const conversationId = await createConversationRecord();
+      if (conversationId) {
+        conversationIdRef.current = conversationId;
+      }
+
       // Request microphone permission first
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
@@ -83,7 +152,11 @@ export const AgentSession: React.FC = () => {
         setSessionStatus
       );
       
-      await realtimeChatRef.current.init(selectedVoice, { instructions, promptId: agent.prompt_id, model: agent.model || 'gpt-realtime-2025-08-28' });
+      await realtimeChatRef.current.init(selectedVoice, { 
+        instructions, 
+        promptId: agent.prompt_id, 
+        model: agent.model || 'gpt-realtime-2025-08-28' 
+      });
       
       toast({
         title: "Connected",
@@ -106,6 +179,8 @@ export const AgentSession: React.FC = () => {
     if (realtimeChatRef.current) {
       realtimeChatRef.current.disconnect();
     }
+    
+    updateConversationStatus('ended');
     
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
