@@ -86,14 +86,16 @@ export const useAuth = () => {
       }
 
       // Create a temporary user session using email/password with invite code as identifier
-      const tempEmail = `invite_${inviteCode.trim().toLowerCase()}@temp.local`;
+      const tempEmail = `invite_${inviteCode.trim().toLowerCase()}@example.com`;
       const tempPassword = `temp_${Date.now()}_${Math.random()}`;
+      const redirectUrl = `${window.location.origin}/`;
 
       // Sign up with temporary credentials
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: tempEmail,
         password: tempPassword,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             invite_code: inviteCode.trim().toUpperCase(),
             full_name: 'Invite User'
