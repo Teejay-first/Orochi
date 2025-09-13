@@ -21,22 +21,15 @@ serve(async (req) => {
     const { voice = 'alloy', instructions } = await req.json();
 
     const sessionConfig = {
-      session: {
-        type: "realtime",
-        model: "gpt-4o-realtime-preview-2024-12-17",
-        audio: {
-          output: {
-            voice: voice,
-          },
-        },
-        instructions: instructions || "You are a helpful assistant.",
-      },
+      model: "gpt-4o-realtime-preview-2024-12-17",
+      voice: voice,
+      instructions: instructions || "You are a helpful assistant.",
     };
 
     console.log("Creating ephemeral token with config:", sessionConfig);
 
     // Request an ephemeral token from OpenAI
-    const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+    const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,

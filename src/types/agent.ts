@@ -59,9 +59,15 @@ export const LANGUAGES = [
 
 export const VOICES = [
   'alloy',
+  'ash',
+  'ballad',
+  'coral',
   'echo', 
   'fable',
-  'onyx',
+  'marin',
   'nova',
-  'shimmer'
+  'onyx',
+  'sage',
+  'shimmer',
+  'verse'
 ] as const;
