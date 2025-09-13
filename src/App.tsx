@@ -7,6 +7,7 @@ import { AgentProvider } from "@/contexts/AgentContext";
 import { Home } from "./pages/Home";
 import { AgentSession } from "./pages/AgentSession";
 import { Admin } from "./pages/Admin";
+import { Auth } from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/agent/:id" element={<AgentSession />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />

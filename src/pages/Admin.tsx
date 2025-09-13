@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAgents } from '@/contexts/AgentContext';
 import { Agent, CATEGORIES, LANGUAGES, VOICES } from '@/types/agent';
+import { useAgents } from '@/contexts/AgentContext'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Edit, Copy, Trash2, Download, Upload, TestTube } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Edit, Copy, Trash2, Download, Upload, Home, TestTube } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { ConversationsRegistry } from '@/components/ConversationsRegistry';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Admin: React.FC = () => {
-  const navigate = useNavigate();
-  const { agents, addAgent, updateAgent, deleteAgent, duplicateAgent, exportAgents, importAgents } = useAgents();
-  const { toast } = useToast();
-  
+  const { agents, addAgent, updateAgent, deleteAgent, exportAgents, importAgents } = useAgents();
+  const { signOut } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [password, setPassword] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -90,7 +91,7 @@ export const Admin: React.FC = () => {
       voice: agent.voice,
       model: agent.model,
     });
-    setIsDialogOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -133,7 +134,7 @@ export const Admin: React.FC = () => {
       await addAgent(agentData);
     }
 
-    setIsDialogOpen(false);
+    setIsModalOpen(false);
     resetForm();
   };
 
@@ -160,8 +161,19 @@ export const Admin: React.FC = () => {
     }
   };
 
-  const handleDuplicate = async (id: string) => {
-    await duplicateAgent(id);
+  const handleDuplicate = async (agent: Agent) => {
+    const duplicatedAgent = {
+      ...agent,
+      id: crypto.randomUUID(),
+      name: `${agent.name} (Copy)`,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    await addAgent(duplicatedAgent);
+    toast({
+      title: "Agent Duplicated",
+      description: `${agent.name} has been duplicated successfully.`,
+    });
   };
 
   const handleExport = () => {
@@ -245,9 +257,9 @@ export const Admin: React.FC = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <Home className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
             <h1 className="text-2xl font-bold">
@@ -256,31 +268,41 @@ export const Admin: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            {isMasterAdmin && (
-              <>
-                <Button onClick={handleExport} variant="outline" size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </Button>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImport}
-                    className="hidden"
-                  />
-                  <Button variant="outline" size="sm" asChild>
-                    <span>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Import
-                    </span>
-                  </Button>
-                </label>
-              </>
-            )}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = handleImport;
+                input.click();
+              }}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={signOut}
+            >
+              Sign Out
+            </Button>
+            
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm} size="sm">
+                <Button onClick={() => resetForm()}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Agent
                 </Button>
@@ -293,108 +315,108 @@ export const Admin: React.FC = () => {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Name</label>
-                      <Input
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Agent Name"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Avatar URL</label>
-                      <Input
-                        value={formData.avatarUrl}
-                        onChange={(e) => setFormData(prev => ({ ...prev, avatarUrl: e.target.value }))}
-                        placeholder="https://..."
-                      />
-                    </div>
-                  </div>
-                  
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Tagline</label>
+                    <Label className="text-sm font-medium mb-2 block">Name</Label>
                     <Input
-                      value={formData.tagline}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tagline: e.target.value }))}
-                      placeholder="Brief description"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Agent Name"
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Category</label>
-                      <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Language</label>
-                      <Select value={formData.language} onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LANGUAGES.map((lang) => (
-                            <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Voice</label>
-                      <Select value={formData.voice} onValueChange={(value) => setFormData(prev => ({ ...prev, voice: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {VOICES.map((voice) => (
-                            <SelectItem key={voice} value={voice}>{voice}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Avatar URL</Label>
+                    <Input
+                      value={formData.avatarUrl}
+                      onChange={(e) => setFormData(prev => ({ ...prev, avatarUrl: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                  </div>
                   </div>
                   
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Tagline</Label>
+                  <Input
+                    value={formData.tagline}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tagline: e.target.value }))}
+                    placeholder="Brief description"
+                  />
+                </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Prompt Source</label>
-                    <Select value={formData.prompt_source} onValueChange={(value: 'text' | 'prompt_id') => setFormData(prev => ({ ...prev, prompt_source: value }))}>
+                    <Label className="text-sm font-medium mb-2 block">Category</Label>
+                    <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="text">Raw Text</SelectItem>
-                        <SelectItem value="prompt_id">Prompt Library ID</SelectItem>
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Language</Label>
+                    <Select value={formData.language} onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Voice</Label>
+                    <Select value={formData.voice} onValueChange={(value) => setFormData(prev => ({ ...prev, voice: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VOICES.map((voice) => (
+                          <SelectItem key={voice} value={voice}>{voice}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  </div>
                   
-                  {formData.prompt_source === 'text' ? (
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Prompt Text</label>
-                      <Textarea
-                        value={formData.prompt_text}
-                        onChange={(e) => setFormData(prev => ({ ...prev, prompt_text: e.target.value }))}
-                        placeholder="System prompt instructions..."
-                        rows={6}
-                      />
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Prompt Library ID</label>
-                      <Input
-                        value={formData.prompt_id}
-                        onChange={(e) => setFormData(prev => ({ ...prev, prompt_id: e.target.value }))}
-                        placeholder="pmpt_..."
-                      />
-                    </div>
-                  )}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Prompt Source</Label>
+                  <Select value={formData.prompt_source} onValueChange={(value: 'text' | 'prompt_id') => setFormData(prev => ({ ...prev, prompt_source: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text">Raw Text</SelectItem>
+                      <SelectItem value="prompt_id">Prompt Library ID</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                  
+                {formData.prompt_source === 'text' ? (
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Prompt Text</Label>
+                    <Textarea
+                      value={formData.prompt_text}
+                      onChange={(e) => setFormData(prev => ({ ...prev, prompt_text: e.target.value }))}
+                      placeholder="System prompt instructions..."
+                      rows={6}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Prompt Library ID</Label>
+                    <Input
+                      value={formData.prompt_id}
+                      onChange={(e) => setFormData(prev => ({ ...prev, prompt_id: e.target.value }))}
+                      placeholder="pmpt_..."
+                    />
+                  </div>
+                )}
                   
                   <div className="flex justify-between">
                     <Button onClick={handleTestPrompt} variant="outline">
@@ -402,7 +424,7 @@ export const Admin: React.FC = () => {
                       Test Prompt
                     </Button>
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                         Cancel
                       </Button>
                       <Button onClick={handleSubmit}>
@@ -418,76 +440,89 @@ export const Admin: React.FC = () => {
       </header>
 
       <main className="p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Agents ({agents.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Avatar</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Tagline</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Language</TableHead>
-                  <TableHead>Prompt Source</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {agents.map((agent) => (
-                  <TableRow key={agent.id}>
-                    <TableCell>
-                      <img src={agent.avatarUrl} alt={agent.name} className="w-8 h-8 rounded-full" />
-                    </TableCell>
-                    <TableCell className="font-medium">{agent.name}</TableCell>
-                    <TableCell className="max-w-xs truncate">{agent.tagline}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">{agent.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">{agent.language}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={agent.prompt_source === 'text' ? 'default' : 'secondary'} className="text-xs">
-                        {agent.prompt_source}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(agent)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDuplicate(agent.id)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        {isMasterAdmin && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(agent.id, agent.name)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="agents" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="agents">Agents Management</TabsTrigger>
+            <TabsTrigger value="conversations">Conversations</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="agents" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Agents ({agents.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Avatar</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Tagline</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Language</TableHead>
+                      <TableHead>Prompt Source</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {agents.map((agent) => (
+                      <TableRow key={agent.id}>
+                        <TableCell>
+                          <img src={agent.avatarUrl} alt={agent.name} className="w-8 h-8 rounded-full" />
+                        </TableCell>
+                        <TableCell className="font-medium">{agent.name}</TableCell>
+                        <TableCell className="max-w-xs truncate">{agent.tagline}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">{agent.category}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{agent.language}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={agent.prompt_source === 'text' ? 'default' : 'secondary'} className="text-xs">
+                            {agent.prompt_source}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(agent)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDuplicate(agent)}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                            {isMasterAdmin && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDelete(agent.id, agent.name)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="conversations" className="mt-6">
+            <ConversationsRegistry />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

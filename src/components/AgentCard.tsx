@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AgentCardProps {
   agent: Agent;
@@ -12,8 +13,13 @@ interface AgentCardProps {
 
 export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleTalk = () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+      return;
+    }
     navigate(`/agent/${agent.id}`);
   };
 

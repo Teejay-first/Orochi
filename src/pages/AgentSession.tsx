@@ -1,35 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Agent, SessionMessage, VoiceSession } from '@/types/agent';
 import { useAgents } from '@/contexts/AgentContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { ArrowLeft, Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
-import { VOICES } from '@/types/agent';
-import { RealtimeChat, RealtimeMessage } from '@/utils/RealtimeAudio';
-import { useToast } from '@/components/ui/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ArrowLeft, Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
+import { RealtimeAudio } from '@/utils/RealtimeAudio';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AgentSession: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { agents } = useAgents();
+  const { getAgentById } = useAgents();
+  const { user, isAuthenticated } = useAuth();
   
-  const agent = agents.find(a => a.id === id);
-  
-  const { toast } = useToast();
-  const realtimeChatRef = useRef<RealtimeChat | null>(null);
-  
-  const [sessionStatus, setSessionStatus] = useState<'idle' | 'connecting' | 'connected' | 'ended'>('idle');
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [session, setSession] = useState<VoiceSession | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isDeafened, setIsDeafened] = useState(false);
-  const [textInput, setTextInput] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState(agent?.voice || 'alloy');
-  const [latencyTarget, setLatencyTarget] = useState([200]);
-  const [maxDuration, setMaxDuration] = useState([300]);
-  const [messages, setMessages] = useState<RealtimeMessage[]>([]);
+  const [messages, setMessages] = useState<SessionMessage[]>([]);
+  
+  const realtimeAudioRef = useRef<RealtimeAudio | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!agent) {
