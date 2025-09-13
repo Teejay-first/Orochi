@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,14 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { LogIn } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export const Auth: React.FC = () => {
   const { signInWithGoogle, signInWithInviteCode, isAuthenticated, loading } = useAuth();
   const [inviteCode, setInviteCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const captchaRef = useRef<any>();
 
   if (loading) {
     return (
@@ -26,10 +29,24 @@ export const Auth: React.FC = () => {
   }
 
   const handleGoogleSignIn = async () => {
+    if (!captchaToken) {
+      toast({
+        title: "Error",
+        description: "Please complete the CAPTCHA verification",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
-    const { error } = await signInWithGoogle();
+    const { error } = await signInWithGoogle(captchaToken);
     if (error) {
       console.error('Google sign-in error:', error);
+    }
+    // Reset CAPTCHA after attempt
+    if (captchaRef.current) {
+      captchaRef.current.reset();
+      setCaptchaToken('');
     }
     setIsProcessing(false);
   };
@@ -44,14 +61,28 @@ export const Auth: React.FC = () => {
       return;
     }
 
+    if (!captchaToken) {
+      toast({
+        title: "Error",
+        description: "Please complete the CAPTCHA verification",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
-    const { error } = await signInWithInviteCode(inviteCode);
+    const { error } = await signInWithInviteCode(inviteCode, captchaToken);
     if (error) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
+    }
+    // Reset CAPTCHA after attempt
+    if (captchaRef.current) {
+      captchaRef.current.reset();
+      setCaptchaToken('');
     }
     setIsProcessing(false);
   };
@@ -68,7 +99,7 @@ export const Auth: React.FC = () => {
         <CardContent className="space-y-4">
           <Button
             onClick={handleGoogleSignIn}
-            disabled={isProcessing}
+            disabled={isProcessing || !captchaToken}
             className="w-full"
             size="lg"
           >
@@ -89,7 +120,7 @@ export const Auth: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Input
               type="text"
               placeholder="Enter invite code"
@@ -102,9 +133,20 @@ export const Auth: React.FC = () => {
               }}
               disabled={isProcessing}
             />
+            
+            <div className="flex justify-center">
+              <Turnstile
+                ref={captchaRef}
+                siteKey="0x4AAAAAAB1DkiFT9Z0eXpzt"
+                onSuccess={(token) => setCaptchaToken(token)}
+                onError={() => setCaptchaToken('')}
+                onExpire={() => setCaptchaToken('')}
+              />
+            </div>
+            
             <Button
               onClick={handleInviteCodeSignIn}
-              disabled={isProcessing || !inviteCode.trim()}
+              disabled={isProcessing || !inviteCode.trim() || !captchaToken}
               className="w-full"
               variant="outline"
             >

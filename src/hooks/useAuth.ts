@@ -29,16 +29,22 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (captchaToken?: string) => {
     const redirectUrl = `${window.location.origin}/`;
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const authOptions: any = {
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
         skipBrowserRedirect: true,
       },
-    });
+    };
+
+    if (captchaToken) {
+      authOptions.options.captchaToken = captchaToken;
+    }
+
+    const { data, error } = await supabase.auth.signInWithOAuth(authOptions);
 
     if (error) {
       toast({
@@ -68,7 +74,7 @@ export const useAuth = () => {
     return { error };
   };
 
-  const signInWithInviteCode = async (inviteCode: string) => {
+  const signInWithInviteCode = async (inviteCode: string, captchaToken?: string) => {
     try {
       // Use RPC function to atomically validate and consume the invite code
       const { data: result, error: rpcError } = await supabase.rpc('use_invite_code', {
@@ -89,7 +95,7 @@ export const useAuth = () => {
       }
 
       // Create an anonymous authenticated session
-      const { data: authData, error: authError } = await supabase.auth.signInAnonymously({
+      const authOptions: any = {
         options: {
           data: {
             invite_code: inviteCode.trim().toUpperCase(),
@@ -97,7 +103,13 @@ export const useAuth = () => {
             auth_method: 'invite_code'
           }
         }
-      });
+      };
+
+      if (captchaToken) {
+        authOptions.options.captchaToken = captchaToken;
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signInAnonymously(authOptions);
 
       if (authError) {
         console.error('Auth Error:', authError);
