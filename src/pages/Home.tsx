@@ -9,7 +9,7 @@ import { Settings, Waves } from 'lucide-react';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { agents } = useAgents();
+  const { agents, loading } = useAgents();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -88,7 +88,13 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Agent Grid */}
-        {filteredAgents.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+            <h3 className="text-xl font-semibold mb-2">Loading agents...</h3>
+            <p className="text-muted-foreground">Please wait while we fetch the available agents.</p>
+          </div>
+        ) : filteredAgents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAgents.map((agent) => (
               <AgentCard key={agent.id} agent={agent} />

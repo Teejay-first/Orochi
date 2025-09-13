@@ -93,7 +93,7 @@ export const Admin: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.tagline.trim()) {
       toast({
         title: "Validation Error",
@@ -128,31 +128,23 @@ export const Admin: React.FC = () => {
     };
 
     if (editingAgent) {
-      updateAgent(editingAgent.id, agentData);
-      toast({
-        title: "Agent Updated",
-        description: `${formData.name} has been updated successfully`,
-      });
+      await updateAgent(editingAgent.id, agentData);
     } else {
-      addAgent(agentData);
-      toast({
-        title: "Agent Created",
-        description: `${formData.name} created successfully. Note: Agents are stored locally per browser.`,
-      });
+      await addAgent(agentData);
     }
 
     setIsDialogOpen(false);
     resetForm();
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete ${name}?`)) {
-      deleteAgent(id);
-      toast({
-        title: "Agent Deleted",
-        description: `${name} has been deleted`,
-      });
+      await deleteAgent(id);
     }
+  };
+
+  const handleDuplicate = async (id: string) => {
+    await duplicateAgent(id);
   };
 
   const handleExport = () => {
@@ -170,19 +162,15 @@ export const Admin: React.FC = () => {
     });
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const content = e.target?.result as string;
-      if (importAgents(content)) {
-        toast({
-          title: "Import Complete",
-          description: "Agents imported successfully",
-        });
-      } else {
+      const success = await importAgents(content);
+      if (!success) {
         toast({
           title: "Import Failed",
           description: "Invalid file format",
@@ -461,7 +449,7 @@ export const Admin: React.FC = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => duplicateAgent(agent.id)}
+                          onClick={() => handleDuplicate(agent.id)}
                         >
                           <Copy className="w-4 h-4" />
                         </Button>

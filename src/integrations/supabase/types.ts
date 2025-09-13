@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agents: {
+        Row: {
+          avatar_url: string
+          category: string
+          created_at: string
+          id: string
+          language: string
+          model: string
+          name: string
+          prompt_id: string | null
+          prompt_source: string
+          prompt_text: string | null
+          tagline: string
+          updated_at: string
+          voice: string
+        }
+        Insert: {
+          avatar_url: string
+          category: string
+          created_at?: string
+          id?: string
+          language: string
+          model?: string
+          name: string
+          prompt_id?: string | null
+          prompt_source: string
+          prompt_text?: string | null
+          tagline: string
+          updated_at?: string
+          voice: string
+        }
+        Update: {
+          avatar_url?: string
+          category?: string
+          created_at?: string
+          id?: string
+          language?: string
+          model?: string
+          name?: string
+          prompt_id?: string | null
+          prompt_source?: string
+          prompt_text?: string | null
+          tagline?: string
+          updated_at?: string
+          voice?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
