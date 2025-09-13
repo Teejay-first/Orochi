@@ -32,7 +32,7 @@ export const Admin: React.FC = () => {
     prompt_text: '',
     prompt_id: '',
     voice: 'alloy',
-    model: 'gpt-realtime',
+    model: 'gpt-realtime-2025-08-28',
   });
 
   const handleLogin = () => {
@@ -62,7 +62,7 @@ export const Admin: React.FC = () => {
       prompt_text: '',
       prompt_id: '',
       voice: 'alloy',
-      model: 'gpt-realtime',
+      model: 'gpt-realtime-2025-08-28',
     });
     setEditingAgent(null);
   };

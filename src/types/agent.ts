@@ -62,12 +62,10 @@ export const VOICES = [
   'ash',
   'ballad',
   'coral',
-  'echo', 
-  'fable',
-  'marin',
-  'nova',
-  'onyx',
+  'echo',
   'sage',
   'shimmer',
-  'verse'
+  'verse',
+  'marin',
+  'cedar'
 ] as const;

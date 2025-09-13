@@ -18,11 +18,17 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const { voice = 'alloy', instructions } = await req.json();
+    const { voice = 'alloy', instructions, model } = await req.json();
+
+    // Sanitize voice against supported list
+    const supportedVoices = new Set([
+      'alloy','ash','ballad','coral','echo','sage','shimmer','verse','marin','cedar'
+    ]);
+    const safeVoice = supportedVoices.has(voice) ? voice : 'alloy';
 
     const sessionConfig = {
-      model: "gpt-4o-realtime-preview-2024-12-17",
-      voice: voice,
+      model: model || "gpt-realtime-2025-08-28",
+      voice: safeVoice,
       instructions: instructions || "You are a helpful assistant.",
     };
 

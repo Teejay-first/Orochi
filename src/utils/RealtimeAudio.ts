@@ -38,7 +38,8 @@ export class RealtimeChat {
       const { data: tokenData, error } = await supabase.functions.invoke("realtime-token", {
         body: {
           voice: agentVoice,
-          instructions: options?.instructions
+          instructions: options?.instructions,
+          model: this.sessionModel
         }
       });
 
