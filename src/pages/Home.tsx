@@ -4,6 +4,7 @@ import { useAgents } from '@/contexts/AgentContext';
 import { AgentCard } from '@/components/AgentCard';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterPanel } from '@/components/FilterPanel';
+import { UserDisplay } from '@/components/UserDisplay';
 import { Button } from '@/components/ui/button';
 import { Settings, Waves } from 'lucide-react';
 
@@ -48,14 +49,17 @@ export const Home: React.FC = () => {
               </h1>
             </div>
             
-            <Button
-              variant="outline"
-              onClick={() => navigate('/admin')}
-              className="hover:bg-secondary-hover transition-smooth"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Admin
-            </Button>
+            <div className="flex items-center gap-2">
+              <UserDisplay />
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin')}
+                className="hover:bg-secondary-hover transition-smooth"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
+            </div>
           </div>
         </div>
       </header>

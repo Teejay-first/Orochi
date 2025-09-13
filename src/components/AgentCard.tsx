@@ -16,6 +16,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   const { isAuthenticated } = useAuth();
 
   const handleTalk = () => {
+    console.log('Talk clicked for agent:', agent.id, 'authenticated:', isAuthenticated);
     if (!isAuthenticated) {
       navigate(`/auth?redirect=/agent/${agent.id}`);
       return;
