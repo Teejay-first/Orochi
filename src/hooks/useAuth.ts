@@ -76,29 +76,13 @@ export const useAuth = () => {
 
   const signInWithInviteCode = async (inviteCode: string, captchaToken?: string) => {
     try {
-      // Use RPC function to atomically validate and consume the invite code
-      const { data: result, error: rpcError } = await supabase.rpc('use_invite_code', {
-        code_to_use: inviteCode.trim()
-      });
+      const code = inviteCode.trim().toUpperCase();
 
-      if (rpcError) {
-        console.error('RPC Error:', rpcError);
-        return { error: { message: 'Failed to validate invite code' } };
-      }
-
-      // Cast the result to the expected type
-      const inviteResult = result as { success: boolean; message: string } | null;
-
-      // Check if the invite code validation was successful
-      if (!inviteResult?.success) {
-        return { error: { message: inviteResult?.message || 'Invalid invite code' } };
-      }
-
-      // Create an anonymous authenticated session
+      // 1) Create an anonymous authenticated session first (so we don't burn invite codes on failure)
       const authOptions: any = {
         options: {
           data: {
-            invite_code: inviteCode.trim().toUpperCase(),
+            invite_code: code,
             full_name: 'Invite User',
             auth_method: 'invite_code'
           }
@@ -110,15 +94,31 @@ export const useAuth = () => {
       }
 
       const { data: authData, error: authError } = await supabase.auth.signInAnonymously(authOptions);
-
       if (authError) {
         console.error('Auth Error:', authError);
-        return { error: { message: 'Failed to create session' } };
+        return { error: { message: authError.message || 'Failed to create session' } };
+      }
+
+      // 2) Now atomically decrement the invite code. If it fails, rollback by signing out.
+      const { data: result, error: rpcError } = await supabase.rpc('use_invite_code', {
+        code_to_use: code
+      });
+
+      if (rpcError) {
+        console.error('RPC Error:', rpcError);
+        await supabase.auth.signOut();
+        return { error: { message: 'Failed to validate invite code' } };
+      }
+
+      const inviteResult = result as { success: boolean; message: string } | null;
+      if (!inviteResult?.success) {
+        await supabase.auth.signOut();
+        return { error: { message: inviteResult?.message || 'Invalid invite code' } };
       }
 
       toast({
-        title: "Welcome!",
-        description: "Successfully signed in with invite code",
+        title: 'Welcome!',
+        description: 'Successfully signed in with invite code',
       });
 
       return { error: null };
