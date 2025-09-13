@@ -19,6 +19,7 @@ export const Admin: React.FC = () => {
   const { toast } = useToast();
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [password, setPassword] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
@@ -36,11 +37,19 @@ export const Admin: React.FC = () => {
   });
 
   const handleLogin = () => {
-    if (password === 'admin45') {
+    if (password === 'adminx66') {
       setIsAuthenticated(true);
+      setIsMasterAdmin(true);
       toast({
-        title: "Access Granted",
-        description: "Welcome to the VoiceTube Admin Panel",
+        title: "Master Admin Access Granted",
+        description: "Welcome to VoiceTube Master Admin Panel",
+      });
+    } else if (password === 'admin45') {
+      setIsAuthenticated(true);
+      setIsMasterAdmin(false);
+      toast({
+        title: "Admin Access Granted", 
+        description: "Welcome to VoiceTube Admin Panel",
       });
     } else {
       toast({
@@ -128,7 +137,7 @@ export const Admin: React.FC = () => {
       addAgent(agentData);
       toast({
         title: "Agent Created",
-        description: `${formData.name} has been created successfully`,
+        description: `${formData.name} created successfully. Note: Agents are stored locally per browser.`,
       });
     }
 
@@ -236,28 +245,34 @@ export const Admin: React.FC = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
-            <h1 className="text-2xl font-bold">VoiceTube Admin</h1>
+            <h1 className="text-2xl font-bold">
+              VoiceTube Admin {isMasterAdmin && <span className="text-primary">(Master)</span>}
+            </h1>
           </div>
           
           <div className="flex items-center gap-2">
-            <Button onClick={handleExport} variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImport}
-                className="hidden"
-              />
-              <Button variant="outline" size="sm" asChild>
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import
-                </span>
-              </Button>
-            </label>
+            {isMasterAdmin && (
+              <>
+                <Button onClick={handleExport} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImport}
+                    className="hidden"
+                  />
+                  <Button variant="outline" size="sm" asChild>
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Import
+                    </span>
+                  </Button>
+                </label>
+              </>
+            )}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm} size="sm">
@@ -450,14 +465,16 @@ export const Admin: React.FC = () => {
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(agent.id, agent.name)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {isMasterAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(agent.id, agent.name)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
