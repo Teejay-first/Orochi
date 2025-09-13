@@ -30,12 +30,14 @@ export const useAuth = () => {
   }, []);
 
   const signInWithGoogle = async (captchaToken?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Build redirect back to Auth page preserving ?redirect=... and break out of iframe
+    // Use the current window location to avoid cross-origin access to window.top in preview
+    const redirectTo = `${window.location.origin}/auth${window.location.search || ''}`;
 
     const authOptions: any = {
       provider: 'google',
       options: {
-        redirectTo: redirectUrl,
+        redirectTo,
         skipBrowserRedirect: true,
       },
     };
@@ -56,8 +58,8 @@ export const useAuth = () => {
     }
 
     if (data?.url) {
-      // Open in new tab since iframe blocks top navigation
-      window.open(data.url, '_blank', 'noopener,noreferrer');
+      // Ensure navigation happens in the top window (not inside Lovable preview iframe)
+      (window.top ?? window).location.href = data.url;
     }
 
     return { error: null };
