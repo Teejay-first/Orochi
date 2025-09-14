@@ -8,7 +8,6 @@ import { Home } from "./pages/Home";
 import { AgentSession } from "./pages/AgentSession";
 import { Admin } from "./pages/Admin";
 import { Auth } from "./pages/Auth";
-import { RequireAdmin } from "./components/RequireAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,7 +23,7 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/agent/:id" element={<AgentSession />} />
-            <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
