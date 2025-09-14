@@ -62,143 +62,6 @@ export type Database = {
         }
         Relationships: []
       }
-      conversation_sessions: {
-        Row: {
-          agent_id: string | null
-          cached_input_tokens: number | null
-          created_at: string | null
-          duration_ms: number | null
-          ended_at: string | null
-          id: string
-          input_tokens: number | null
-          metadata: Json | null
-          model: string | null
-          output_tokens: number | null
-          session_id: string | null
-          started_at: string
-          status: string | null
-          total_tokens: number | null
-          transcript: Json | null
-          transport: string | null
-          turns: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          agent_id?: string | null
-          cached_input_tokens?: number | null
-          created_at?: string | null
-          duration_ms?: number | null
-          ended_at?: string | null
-          id?: string
-          input_tokens?: number | null
-          metadata?: Json | null
-          model?: string | null
-          output_tokens?: number | null
-          session_id?: string | null
-          started_at?: string
-          status?: string | null
-          total_tokens?: number | null
-          transcript?: Json | null
-          transport?: string | null
-          turns?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          agent_id?: string | null
-          cached_input_tokens?: number | null
-          created_at?: string | null
-          duration_ms?: number | null
-          ended_at?: string | null
-          id?: string
-          input_tokens?: number | null
-          metadata?: Json | null
-          model?: string | null
-          output_tokens?: number | null
-          session_id?: string | null
-          started_at?: string
-          status?: string | null
-          total_tokens?: number | null
-          transcript?: Json | null
-          transport?: string | null
-          turns?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversation_sessions_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_usage_stats"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      conversation_turns: {
-        Row: {
-          assistant_text: string | null
-          cached_input_tokens: number | null
-          completed_at: string | null
-          conversation_id: string | null
-          created_at: string | null
-          id: string
-          input_tokens: number | null
-          output_tokens: number | null
-          raw_meta: Json | null
-          raw_usage: Json | null
-          started_at: string | null
-          turn_index: number
-          user_text: string | null
-        }
-        Insert: {
-          assistant_text?: string | null
-          cached_input_tokens?: number | null
-          completed_at?: string | null
-          conversation_id?: string | null
-          created_at?: string | null
-          id?: string
-          input_tokens?: number | null
-          output_tokens?: number | null
-          raw_meta?: Json | null
-          raw_usage?: Json | null
-          started_at?: string | null
-          turn_index: number
-          user_text?: string | null
-        }
-        Update: {
-          assistant_text?: string | null
-          cached_input_tokens?: number | null
-          completed_at?: string | null
-          conversation_id?: string | null
-          created_at?: string | null
-          id?: string
-          input_tokens?: number | null
-          output_tokens?: number | null
-          raw_meta?: Json | null
-          raw_usage?: Json | null
-          started_at?: string | null
-          turn_index?: number
-          user_text?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversation_turns_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversation_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       conversations: {
         Row: {
           agent_id: string
@@ -241,13 +104,6 @@ export type Database = {
             referencedRelation: "agents"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "conversations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_usage_stats"
-            referencedColumns: ["user_id"]
-          },
         ]
       }
       invite_codes: {
@@ -275,15 +131,7 @@ export type Database = {
           updated_at?: string
           uses_remaining?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "invite_codes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "user_usage_stats"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -292,8 +140,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          is_admin: boolean | null
-          is_super_admin: boolean | null
           role: string | null
           updated_at: string
           user_id: string
@@ -304,8 +150,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          is_admin?: boolean | null
-          is_super_admin?: boolean | null
           role?: string | null
           updated_at?: string
           user_id: string
@@ -316,41 +160,15 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          is_admin?: boolean | null
-          is_super_admin?: boolean | null
           role?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "user_usage_stats"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
-      user_usage_stats: {
-        Row: {
-          conversations_count: number | null
-          email: string | null
-          full_name: string | null
-          is_admin: boolean | null
-          is_super_admin: boolean | null
-          total_cached_tokens: number | null
-          total_input_tokens: number | null
-          total_minutes: number | null
-          total_output_tokens: number | null
-          total_turns: number | null
-          user_created_at: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       is_admin_user: {
