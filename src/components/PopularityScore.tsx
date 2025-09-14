@@ -1,13 +1,13 @@
 import React from 'react';
-import { TrendingUp } from 'lucide-react';
 
 interface PopularityScoreProps {
   score: number;
+  price?: number;
   className?: string;
 }
 
-export const PopularityScore: React.FC<PopularityScoreProps> = ({ score, className = "" }) => {
-  if (score <= 0) return null;
+export const PopularityScore: React.FC<PopularityScoreProps> = ({ score, price, className = "" }) => {
+  if (score <= 0 && !price) return null;
 
   const formatScore = (num: number) => {
     if (num >= 1000) {
@@ -16,12 +16,22 @@ export const PopularityScore: React.FC<PopularityScoreProps> = ({ score, classNa
     return num.toString();
   };
 
+  const getPriceSymbols = (priceLevel: number) => {
+    return '$'.repeat(priceLevel);
+  };
+
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
-      <TrendingUp className="w-3 h-3 text-muted-foreground" />
-      <span className="text-xs text-muted-foreground">
-        {formatScore(score)}
-      </span>
+    <div className={`flex items-center justify-between gap-2 px-2 py-1 border border-red-500 rounded text-xs ${className}`}>
+      {score > 0 && (
+        <span className="text-muted-foreground">
+          {formatScore(score)}
+        </span>
+      )}
+      {price && price > 0 && (
+        <span className="text-muted-foreground">
+          {getPriceSymbols(price)}
+        </span>
+      )}
     </div>
   );
 };
