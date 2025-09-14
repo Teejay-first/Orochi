@@ -30,18 +30,20 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
     <Card className="group relative overflow-hidden border-border/40 bg-gradient-card hover:border-primary/30 transition-smooth shadow-card hover:shadow-glow">
       <CardContent className="p-6 flex flex-col h-full">
         <div className="flex items-start gap-4 flex-1">
-          <div className="relative flex-shrink-0">
-            <img
-              src={agent.avatarUrl}
-              alt={agent.name}
-              className="w-16 h-16 rounded-full object-cover ring-2 ring-border group-hover:ring-primary/50 transition-smooth"
-            />
-            <div className="absolute -bottom-1 -right-1 voice-indicator" />
+          <div className="flex flex-col items-center">
+            <div className="relative flex-shrink-0">
+              <img
+                src={agent.avatarUrl}
+                alt={agent.name}
+                className="w-16 h-16 rounded-full object-cover ring-2 ring-border group-hover:ring-primary/50 transition-smooth"
+              />
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-status-deployed rounded-full border-2 border-card" />
+            </div>
             
-            {/* Rating section moved under avatar */}
+            {/* Rating section under avatar */}
             <div className="mt-2 flex flex-col items-center gap-1">
               {agent.average_rating !== undefined && agent.average_rating > 0 && (
-                <StarRating rating={agent.average_rating} />
+                <StarRating rating={agent.average_rating} count={agent.total_ratings} />
               )}
               {agent.rating !== undefined && agent.rating > 0 && (
                 <PopularityScore score={agent.rating} />
