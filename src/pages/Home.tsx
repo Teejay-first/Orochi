@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAgents } from '@/contexts/AgentContext';
-import { useAuth } from '@/hooks/useAuth';
 import { AgentCard } from '@/components/AgentCard';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterPanel } from '@/components/FilterPanel';
@@ -11,8 +10,7 @@ import { Settings, Waves } from 'lucide-react';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { agents, loading: agentsLoading } = useAgents();
-  const { isAuthenticated, roles, loading: authLoading } = useAuth();
+  const { agents, loading } = useAgents();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -53,17 +51,14 @@ export const Home: React.FC = () => {
             
             <div className="flex items-center gap-2">
               <UserDisplay />
-              {isAuthenticated && roles.isAdmin && (
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/admin')}
-                  className="hover:bg-secondary-hover transition-smooth"
-                  disabled={authLoading}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  {authLoading ? <div className="w-10 h-4 bg-muted rounded animate-pulse" /> : 'Admin'}
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin')}
+                className="hover:bg-secondary-hover transition-smooth"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
             </div>
           </div>
         </div>
@@ -97,7 +92,7 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Agent Grid */}
-        {agentsLoading ? (
+        {loading ? (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
             <h3 className="text-xl font-semibold mb-2">Loading agents...</h3>
