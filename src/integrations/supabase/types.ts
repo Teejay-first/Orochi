@@ -246,6 +246,7 @@ export type Database = {
           short_desc: string | null
           slug: string | null
           status: string | null
+          status_type: string | null
           tagline: string
           tags: string[] | null
           updated_at: string
@@ -272,6 +273,7 @@ export type Database = {
           short_desc?: string | null
           slug?: string | null
           status?: string | null
+          status_type?: string | null
           tagline: string
           tags?: string[] | null
           updated_at?: string
@@ -298,6 +300,7 @@ export type Database = {
           short_desc?: string | null
           slug?: string | null
           status?: string | null
+          status_type?: string | null
           tagline?: string
           tags?: string[] | null
           updated_at?: string

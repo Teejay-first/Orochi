@@ -46,6 +46,16 @@
     --warning-foreground: 220 13% 8%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 220 9% 95%;
+    
+    /* Agent status colors */
+    --status-deployed: 142 76% 36%;
+    --status-deployed-foreground: 220 9% 95%;
+    --status-testing: 48 96% 53%;
+    --status-testing-foreground: 220 13% 8%;
+    --status-building: 25 95% 53%;
+    --status-building-foreground: 220 9% 95%;
+    --status-repairing: 0 84% 60%;
+    --status-repairing-foreground: 220 9% 95%;
 
     /* Border and input system */
     --border: 220 13% 18%;

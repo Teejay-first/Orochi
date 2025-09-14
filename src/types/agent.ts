@@ -10,6 +10,7 @@ export interface Agent {
   prompt_id?: string;
   voice: string;
   model: string;
+  status_type: 'deployed' | 'testing' | 'building' | 'repairing';
   createdAt: number;
   updatedAt: number;
 }
@@ -68,4 +69,11 @@ export const VOICES = [
   'verse',
   'marin',
   'cedar'
+] as const;
+
+export const STATUS_TYPES = [
+  { value: 'deployed', label: 'Deployed', color: 'status-deployed' },
+  { value: 'testing', label: 'Testing', color: 'status-testing' },
+  { value: 'building', label: 'Building', color: 'status-building' },
+  { value: 'repairing', label: 'Repairing', color: 'status-repairing' }
 ] as const;

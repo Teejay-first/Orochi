@@ -1,25 +1,29 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { CATEGORIES, LANGUAGES } from '@/types/agent';
+import { CATEGORIES, LANGUAGES, STATUS_TYPES } from '@/types/agent';
 import { X } from 'lucide-react';
 
 interface FilterPanelProps {
   selectedCategory: string;
   selectedLanguage: string;
+  selectedStatus: string;
   onCategoryChange: (category: string) => void;
   onLanguageChange: (language: string) => void;
+  onStatusChange: (status: string) => void;
   onClearFilters: () => void;
 }
 
 export const FilterPanel: React.FC<FilterPanelProps> = ({
   selectedCategory,
   selectedLanguage,
+  selectedStatus,
   onCategoryChange,
   onLanguageChange,
+  onStatusChange,
   onClearFilters,
 }) => {
-  const hasActiveFilters = selectedCategory !== 'all' || selectedLanguage !== 'all';
+  const hasActiveFilters = selectedCategory !== 'all' || selectedLanguage !== 'all' || selectedStatus !== 'all';
 
   return (
     <div className="flex items-center gap-4 flex-wrap">
@@ -46,6 +50,20 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           {LANGUAGES.map((lang) => (
             <SelectItem key={lang.code} value={lang.code}>
               {lang.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={selectedStatus} onValueChange={onStatusChange}>
+        <SelectTrigger className="w-40 bg-input border-border/40">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          {STATUS_TYPES.map((status) => (
+            <SelectItem key={status.value} value={status.value}>
+              {status.label}
             </SelectItem>
           ))}
         </SelectContent>

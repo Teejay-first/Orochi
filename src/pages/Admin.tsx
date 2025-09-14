@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Agent, CATEGORIES, LANGUAGES, VOICES } from '@/types/agent';
+import { Agent, CATEGORIES, LANGUAGES, VOICES, STATUS_TYPES } from '@/types/agent';
 import { useAgents } from '@/contexts/AgentContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ export const Admin: React.FC = () => {
     prompt_id: '',
     voice: 'alloy',
     model: 'gpt-realtime-2025-08-28',
+    status_type: 'deployed' as Agent['status_type'],
   });
 
   const resetForm = () => {
@@ -48,6 +49,7 @@ export const Admin: React.FC = () => {
       prompt_id: '',
       voice: 'alloy',
       model: 'gpt-realtime-2025-08-28',
+      status_type: 'deployed',
     });
     setEditingAgent(null);
   };
@@ -65,6 +67,7 @@ export const Admin: React.FC = () => {
       prompt_id: agent.prompt_id || '',
       voice: agent.voice,
       model: agent.model,
+      status_type: agent.status_type,
     });
     setIsModalOpen(true);
   };
@@ -324,8 +327,22 @@ export const Admin: React.FC = () => {
                   </div>
                   </div>
                   
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Prompt Source</Label>
+                 <div>
+                   <Label className="text-sm font-medium mb-2 block">Status</Label>
+                   <Select value={formData.status_type} onValueChange={(value: Agent['status_type']) => setFormData(prev => ({ ...prev, status_type: value }))}>
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {STATUS_TYPES.map((status) => (
+                         <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                   
+                 <div>
+                   <Label className="text-sm font-medium mb-2 block">Prompt Source</Label>
                   <Select value={formData.prompt_source} onValueChange={(value: 'text' | 'prompt_id') => setFormData(prev => ({ ...prev, prompt_source: value }))}>
                     <SelectTrigger>
                       <SelectValue />
@@ -400,6 +417,7 @@ export const Admin: React.FC = () => {
                       <TableHead>Tagline</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Language</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Prompt Source</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -417,6 +435,18 @@ export const Admin: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">{agent.language}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            className={`text-xs font-medium ${
+                              agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
+                              agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
+                              agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
+                              'bg-status-repairing text-status-repairing-foreground'
+                            }`}
+                          >
+                            {agent.status_type.charAt(0).toUpperCase() + agent.status_type.slice(1)}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant={agent.prompt_source === 'text' ? 'default' : 'secondary'} className="text-xs">

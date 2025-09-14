@@ -45,12 +45,22 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               {agent.tagline}
             </p>
             
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
               <Badge variant="secondary" className="text-xs">
                 {agent.category}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {agent.language}
+              </Badge>
+              <Badge 
+                className={`text-xs font-medium ${
+                  agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
+                  agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
+                  agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
+                  'bg-status-repairing text-status-repairing-foreground'
+                }`}
+              >
+                {agent.status_type.charAt(0).toUpperCase() + agent.status_type.slice(1)}
               </Badge>
             </div>
           </div>

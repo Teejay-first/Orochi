@@ -42,6 +42,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     prompt_id: row.prompt_id,
     voice: row.voice,
     model: row.model,
+    status_type: row.status_type || 'deployed',
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime()
   });
@@ -57,7 +58,8 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     prompt_text: agent.prompt_text,
     prompt_id: agent.prompt_id,
     voice: agent.voice,
-    model: agent.model
+    model: agent.model,
+    status_type: agent.status_type
   });
 
   // Load agents from database on mount

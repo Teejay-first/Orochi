@@ -60,6 +60,22 @@ export default {
           foreground: "hsl(var(--card-foreground))",
           hover: "hsl(var(--card-hover))",
         },
+        "status-deployed": {
+          DEFAULT: "hsl(var(--status-deployed))",
+          foreground: "hsl(var(--status-deployed-foreground))",
+        },
+        "status-testing": {
+          DEFAULT: "hsl(var(--status-testing))",
+          foreground: "hsl(var(--status-testing-foreground))",
+        },
+        "status-building": {
+          DEFAULT: "hsl(var(--status-building))",
+          foreground: "hsl(var(--status-building-foreground))",
+        },
+        "status-repairing": {
+          DEFAULT: "hsl(var(--status-repairing))",
+          foreground: "hsl(var(--status-repairing-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

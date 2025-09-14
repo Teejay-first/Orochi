@@ -17,6 +17,8 @@ export const Home: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
 
+  const [selectedStatus, setSelectedStatus] = useState('all');
+
   const filteredAgents = useMemo(() => {
     return agents.filter(agent => {
       const matchesSearch = searchQuery === '' || 
@@ -25,14 +27,16 @@ export const Home: React.FC = () => {
       
       const matchesCategory = selectedCategory === 'all' || agent.category === selectedCategory;
       const matchesLanguage = selectedLanguage === 'all' || agent.language === selectedLanguage;
+      const matchesStatus = selectedStatus === 'all' || agent.status_type === selectedStatus;
       
-      return matchesSearch && matchesCategory && matchesLanguage;
+      return matchesSearch && matchesCategory && matchesLanguage && matchesStatus;
     });
-  }, [agents, searchQuery, selectedCategory, selectedLanguage]);
+  }, [agents, searchQuery, selectedCategory, selectedLanguage, selectedStatus]);
 
   const handleClearFilters = () => {
     setSelectedCategory('all');
     setSelectedLanguage('all');
+    setSelectedStatus('all');
     setSearchQuery('');
   };
 
@@ -84,8 +88,10 @@ export const Home: React.FC = () => {
             <FilterPanel
               selectedCategory={selectedCategory}
               selectedLanguage={selectedLanguage}
+              selectedStatus={selectedStatus}
               onCategoryChange={setSelectedCategory}
               onLanguageChange={setSelectedLanguage}
+              onStatusChange={setSelectedStatus}
               onClearFilters={handleClearFilters}
             />
           </div>
