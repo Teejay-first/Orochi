@@ -7,7 +7,7 @@ import { FilterPanel } from '@/components/FilterPanel';
 import { UserDisplay } from '@/components/UserDisplay';
 import { SortDropdown, SortOption, TimeFilter } from '@/components/SortDropdown';
 import { Button } from '@/components/ui/button';
-import { Settings, Waves } from 'lucide-react';
+import { Settings, Waves, Plus, Linkedin, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Home: React.FC = () => {
@@ -86,6 +86,14 @@ export const Home: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-2">
+              <Button
+                onClick={() => window.open('https://discord.gg/6Se9nUBBgX', '_blank')}
+                variant="default"
+                className="hover:bg-primary-hover transition-smooth"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Submit
+              </Button>
               <UserDisplay />
               {isAdmin && (
                 <Button
@@ -105,13 +113,13 @@ export const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="border-b border-border/20 bg-card/30">
         <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 text-foreground">
             <span className="block">
               <span className="text-primary">Your</span>{' '}
-              <span className="text-foreground">Hub to Discover</span>
+              <span>Hub to Discover</span>
             </span>
             <span className="block">
-              <span className="text-foreground">the Best</span>{' '}
+              <span>the Best</span>{' '}
               <span className="text-primary">Voice AI Agents</span>
             </span>
           </h1>
@@ -185,6 +193,114 @@ export const Home: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-card/50 mt-16">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="md:col-span-2">
+              <h3 className="text-xl font-bold text-foreground mb-4">Voice AI Directory</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                The trusted place to discover, test, and rank voice AI agents with curated listings, live demos, public scores, and easy submissions.
+              </p>
+              <div className="flex gap-4">
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Linkedin className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Mail className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Voice AI Agents Categories */}
+            <div>
+              <h4 className="font-bold text-foreground mb-4">Voice AI Agents</h4>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('all'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Home
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('education'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Education
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('sales'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Sales
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('shopping'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Shopping
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('support'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Support
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('fitness'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Fitness
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {setSelectedCategory('health'); window.scrollTo(0, 0);}}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Health
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="font-bold text-foreground mb-4">Legal</h4>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>
+                  <button className="hover:text-foreground transition-colors">
+                    Privacy Policy
+                  </button>
+                </li>
+                <li>
+                  <button className="hover:text-foreground transition-colors">
+                    Terms of Service
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-border/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
+            <div>© 2025 Voice AI Directory. All rights reserved.</div>
+            <div className="mt-2 md:mt-0">Built with care for voice AI aficionados.</div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
