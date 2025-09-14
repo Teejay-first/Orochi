@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Agent, CATEGORIES, LANGUAGES, VOICES } from '@/types/agent';
 import { useAgents } from '@/contexts/AgentContext';
@@ -15,16 +15,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Copy, Trash2, Download, Upload, Home, TestTube } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ConversationsRegistry } from '@/components/ConversationsRegistry';
-import { UserManagement } from '@/components/UserManagement';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
   const { agents, addAgent, updateAgent, deleteAgent, duplicateAgent, exportAgents, importAgents } = useAgents();
-  const { user, signOut } = useAuth();
-  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { signOut } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
+  const [password, setPassword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [formData, setFormData] = useState({
@@ -40,59 +39,29 @@ export const Admin: React.FC = () => {
     model: 'gpt-realtime-2025-08-28',
   });
 
-  useEffect(() => {
-    checkAuthAndProfile();
-  }, [user]);
-
-  const checkAuthAndProfile = async () => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load user profile. Please try logging in again.",
-          variant: "destructive",
-        });
-        await signOut();
-        navigate('/auth');
-        return;
-      }
-
-      if (!profile?.is_admin && !profile?.is_super_admin) {
-        toast({
-          title: "Access Denied", 
-          description: "You need admin privileges to access this page.",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
-      }
-
-      setCurrentUserProfile(profile);
-    } catch (error) {
-      console.error('Error checking admin status:', error);
+  const handleLogin = () => {
+    if (password === 'adminx66') {
+      setIsAuthenticated(true);
+      setIsMasterAdmin(true);
       toast({
-        title: "Error",
-        description: "Failed to verify admin privileges",
+        title: "Master Admin Access Granted",
+        description: "Welcome to VoiceTube Master Admin Panel",
+      });
+    } else if (password === 'admin45') {
+      setIsAuthenticated(true);
+      setIsMasterAdmin(false);
+      toast({
+        title: "Admin Access Granted", 
+        description: "Welcome to VoiceTube Admin Panel",
+      });
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "Invalid password",
         variant: "destructive",
       });
-      navigate('/');
-    } finally {
-      setLoading(false);
     }
   };
-
 
   const resetForm = () => {
     setFormData({
@@ -172,10 +141,14 @@ export const Admin: React.FC = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!currentUserProfile?.is_super_admin) {
+    const superAdminPassword = prompt(
+      `⚠️ Agent deletion requires super admin authorization.\n\nEnter super admin password to delete "${name}":`
+    );
+    
+    if (superAdminPassword !== 'adminx1') {
       toast({
         title: "Access Denied",
-        description: "Only super admins can delete agents.",
+        description: "Invalid super admin password. Agent deletion cancelled.",
         variant: "destructive",
       });
       return;
@@ -247,23 +220,35 @@ export const Admin: React.FC = () => {
     });
   };
 
-  if (loading) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">Loading Admin Panel</CardTitle>
+            <CardTitle className="text-center">Admin Access</CardTitle>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="text-muted-foreground">Verifying admin privileges...</div>
+          <CardContent className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Enter admin password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+            />
+            <Button onClick={handleLogin} className="w-full">
+              Login
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="w-full"
+            >
+              Back to Home
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
-  }
-
-  if (!currentUserProfile) {
-    return null; // This shouldn't happen as we redirect in useEffect
   }
 
   return (
@@ -280,7 +265,7 @@ export const Admin: React.FC = () => {
               Back to Home
             </Button>
             <h1 className="text-2xl font-bold">
-              VoiceTube Admin {currentUserProfile?.is_super_admin && <span className="text-primary">(Super Admin)</span>}
+              VoiceTube Admin {isMasterAdmin && <span className="text-primary">(Master)</span>}
             </h1>
           </div>
           
@@ -458,10 +443,9 @@ export const Admin: React.FC = () => {
 
       <main className="p-6">
         <Tabs defaultValue="agents" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="agents">Agents Management</TabsTrigger>
-            <TabsTrigger value="conversations">Conversations History</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="conversations">Conversations</TabsTrigger>
           </TabsList>
           
           <TabsContent value="agents" className="mt-6">
@@ -517,7 +501,7 @@ export const Admin: React.FC = () => {
                             >
                               <Copy className="w-4 h-4" />
                             </Button>
-                            {currentUserProfile?.is_super_admin && (
+                            {isMasterAdmin && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -539,10 +523,6 @@ export const Admin: React.FC = () => {
           
           <TabsContent value="conversations" className="mt-6">
             <ConversationsRegistry />
-          </TabsContent>
-          
-          <TabsContent value="users" className="mt-6">
-            <UserManagement currentUserProfile={currentUserProfile} />
           </TabsContent>
         </Tabs>
       </main>
