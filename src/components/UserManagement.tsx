@@ -21,7 +21,6 @@ interface UserStats {
   total_input_tokens: number;
   total_output_tokens: number;
   total_cached_tokens: number;
-  total_turns: number;
   user_created_at: string;
 }
 
@@ -343,11 +342,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUserProfi
                     <div className="border-t p-4 bg-muted/20">
                       <div className="mb-4">
                         <h4 className="font-medium mb-2">Usage Statistics</h4>
-                        <div className="grid grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <div className="text-muted-foreground">Total Turns</div>
-                            <div className="font-medium">{user.total_turns}</div>
-                          </div>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <div className="text-muted-foreground">Input Tokens</div>
                             <div className="font-medium">{user.total_input_tokens.toLocaleString()}</div>
