@@ -399,11 +399,6 @@ export const AgentSession: React.FC = () => {
       </div>
 
       {/* Push-to-talk functionality removed - using hands-free mode only */}
-          >
-            {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-          </Button>
-        </div>
-      )}
 
       {/* Sidebar */}
       <div className="w-80 border-l border-border/40 bg-card/30 p-4 space-y-6">
