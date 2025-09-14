@@ -26,9 +26,9 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
 
   return (
     <Card className="group relative overflow-hidden border-border/40 bg-gradient-card hover:border-primary/30 transition-smooth shadow-card hover:shadow-glow">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="relative">
+      <CardContent className="p-6 flex flex-col h-full">
+        <div className="flex items-start gap-4 flex-1">
+          <div className="relative flex-shrink-0">
             <img
               src={agent.avatarUrl}
               alt={agent.name}
@@ -37,21 +37,17 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             <div className="absolute -bottom-1 -right-1 voice-indicator" />
           </div>
           
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg mb-1 truncate group-hover:text-primary transition-smooth">
-              {agent.name}
-            </h3>
-            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-              {agent.tagline}
-            </p>
+          <div className="flex-1 min-w-0 flex flex-col justify-between">
+            <div>
+              <h3 className="font-semibold text-lg mb-2 truncate group-hover:text-primary transition-smooth">
+                {agent.name}
+              </h3>
+              <p className="text-muted-foreground text-sm mb-4 line-clamp-2 h-10 leading-5">
+                {agent.tagline}
+              </p>
+            </div>
             
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <Badge variant="secondary" className="text-xs">
-                {agent.category}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {agent.language}
-              </Badge>
+            <div className="flex items-center gap-1 flex-wrap h-12 overflow-hidden">
               <Badge 
                 className={`text-xs font-medium ${
                   agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
@@ -62,13 +58,28 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               >
                 {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
               </Badge>
+              <Badge variant="outline" className="text-xs">
+                {agent.language[0]}
+              </Badge>
+              <Badge variant="secondary" className="text-xs">
+                {agent.category}
+              </Badge>
+              {agent.language.length > 1 && (
+                <div className="flex gap-1 flex-wrap">
+                  {agent.language.slice(1).map((lang, index) => (
+                    <Badge key={index} variant="outline" className="text-xs opacity-70">
+                      {lang}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
         
         <Button 
           onClick={handleTalk}
-          className="w-full group-hover:shadow-accent transition-spring"
+          className="w-full group-hover:shadow-accent transition-spring mt-4"
           size="sm"
         >
           <Mic className="w-4 h-4 mr-2" />

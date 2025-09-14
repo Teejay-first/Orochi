@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +29,7 @@ export const Admin: React.FC = () => {
     avatarUrl: '',
     tagline: '',
     category: 'Other',
-    language: 'EN',
+    language: ['EN'],
     prompt_source: 'text' as 'text' | 'prompt_id',
     prompt_text: '',
     prompt_id: '',
@@ -43,7 +44,7 @@ export const Admin: React.FC = () => {
       avatarUrl: '',
       tagline: '',
       category: 'Other',
-      language: 'EN',
+      language: ['EN'],
       prompt_source: 'text',
       prompt_text: '',
       prompt_id: '',
@@ -308,17 +309,27 @@ export const Admin: React.FC = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Language</Label>
-                    <Select value={formData.language} onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {LANGUAGES.map((lang) => (
-                          <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-sm font-medium mb-2 block">Languages</Label>
+                    <div className="space-y-2">
+                      {LANGUAGES.map((lang) => (
+                        <div key={lang.code} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={lang.code}
+                            checked={formData.language.includes(lang.code)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFormData(prev => ({ ...prev, language: [...prev.language, lang.code] }));
+                              } else {
+                                setFormData(prev => ({ ...prev, language: prev.language.filter(l => l !== lang.code) }));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={lang.code} className="text-sm font-normal">
+                            {lang.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Voice</Label>

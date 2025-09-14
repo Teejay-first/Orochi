@@ -233,7 +233,7 @@ export type Database = {
           created_at: string
           id: string
           is_featured: boolean | null
-          language: string
+          language: string[]
           model: string
           name: string
           owner_user_id: string | null
@@ -260,7 +260,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean | null
-          language: string
+          language: string[]
           model?: string
           name: string
           owner_user_id?: string | null
@@ -287,7 +287,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean | null
-          language?: string
+          language?: string[]
           model?: string
           name?: string
           owner_user_id?: string | null

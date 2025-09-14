@@ -26,7 +26,7 @@ export const Home: React.FC = () => {
         agent.tagline.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesCategory = selectedCategory === 'all' || agent.category === selectedCategory;
-      const matchesLanguage = selectedLanguage === 'all' || agent.language === selectedLanguage;
+      const matchesLanguage = selectedLanguage === 'all' || agent.language.includes(selectedLanguage);
       const matchesStatus = selectedStatus === 'all' || agent.status_type === selectedStatus;
       
       return matchesSearch && matchesCategory && matchesLanguage && matchesStatus;

@@ -4,7 +4,7 @@ export interface Agent {
   avatarUrl: string;
   tagline: string;
   category: string;
-  language: string;
+  language: string[];
   prompt_source: 'text' | 'prompt_id';
   prompt_text?: string;
   prompt_id?: string;
