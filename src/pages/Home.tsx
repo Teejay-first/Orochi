@@ -5,6 +5,7 @@ import { AgentCard } from '@/components/AgentCard';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterPanel } from '@/components/FilterPanel';
 import { UserDisplay } from '@/components/UserDisplay';
+import { SortDropdown, SortOption, TimeFilter } from '@/components/SortDropdown';
 import { Button } from '@/components/ui/button';
 import { Settings, Waves } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,6 +19,8 @@ export const Home: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('all');
 
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [sortBy, setSortBy] = useState<SortOption>('rating_desc');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
 
   const filteredAgents = useMemo(() => {
     return agents.filter(agent => {
@@ -33,11 +36,34 @@ export const Home: React.FC = () => {
     });
   }, [agents, searchQuery, selectedCategory, selectedLanguage, selectedStatus]);
 
+  const sortedAgents = useMemo(() => {
+    const filtered = [...filteredAgents];
+    
+    switch (sortBy) {
+      case 'rating_desc':
+        return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'rating_asc':
+        return filtered.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+      case 'name_asc':
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name_desc':
+        return filtered.sort((a, b) => b.name.localeCompare(a.name));
+      case 'newest':
+        return filtered.sort((a, b) => b.createdAt - a.createdAt);
+      case 'oldest':
+        return filtered.sort((a, b) => a.createdAt - b.createdAt);
+      default:
+        return filtered;
+    }
+  }, [filteredAgents, sortBy]);
+
   const handleClearFilters = () => {
     setSelectedCategory('all');
     setSelectedLanguage('all');
     setSelectedStatus('all');
     setSearchQuery('');
+    setSortBy('rating_desc');
+    setTimeFilter('all');
   };
 
   return (
@@ -76,7 +102,7 @@ export const Home: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div className="flex-1 max-w-md">
               <SearchBar
                 value={searchQuery}
@@ -85,19 +111,28 @@ export const Home: React.FC = () => {
               />
             </div>
             
-            <FilterPanel
-              selectedCategory={selectedCategory}
-              selectedLanguage={selectedLanguage}
-              selectedStatus={selectedStatus}
-              onCategoryChange={setSelectedCategory}
-              onLanguageChange={setSelectedLanguage}
-              onStatusChange={setSelectedStatus}
-              onClearFilters={handleClearFilters}
-            />
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <SortDropdown
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                timeFilter={timeFilter}
+                onTimeFilterChange={setTimeFilter}
+              />
+              
+              <FilterPanel
+                selectedCategory={selectedCategory}
+                selectedLanguage={selectedLanguage}
+                selectedStatus={selectedStatus}
+                onCategoryChange={setSelectedCategory}
+                onLanguageChange={setSelectedLanguage}
+                onStatusChange={setSelectedStatus}
+                onClearFilters={handleClearFilters}
+              />
+            </div>
           </div>
           
           <div className="text-sm text-muted-foreground">
-            {filteredAgents.length} {filteredAgents.length === 1 ? 'agent' : 'agents'} available
+            {sortedAgents.length} {sortedAgents.length === 1 ? 'agent' : 'agents'} available
           </div>
         </div>
 
@@ -108,9 +143,9 @@ export const Home: React.FC = () => {
             <h3 className="text-xl font-semibold mb-2">Loading agents...</h3>
             <p className="text-muted-foreground">Please wait while we fetch the available agents.</p>
           </div>
-        ) : filteredAgents.length > 0 ? (
+        ) : sortedAgents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAgents.map((agent) => (
+            {sortedAgents.map((agent) => (
               <AgentCard key={agent.id} agent={agent} />
             ))}
           </div>

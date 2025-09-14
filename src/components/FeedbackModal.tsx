@@ -15,12 +15,21 @@ interface FeedbackModalProps {
 }
 
 const FEEDBACK_TAGS = [
-  { label: 'Gives wrong info', value: 'wrong_info', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
-  { label: "Didn't understand me", value: 'did_not_understand', color: 'bg-orange-100 text-orange-800 hover:bg-orange-200' },
-  { label: 'Audio quality', value: 'audio_quality', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
-  { label: 'Too slow / latency', value: 'too_slow', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
-  { label: 'Rude / offensive', value: 'rude', color: 'bg-purple-100 text-purple-800 hover:bg-purple-200' },
-  { label: 'UI issue', value: 'ui_issue', color: 'bg-gray-100 text-gray-800 hover:bg-gray-200' },
+  { label: 'Wrong/Outdated Info', value: 'wrong_info', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
+  { label: "Didn't Understand", value: 'did_not_understand', color: 'bg-orange-100 text-orange-800 hover:bg-orange-200' },
+  { label: 'Hallucinated/Made Up', value: 'hallucination', color: 'bg-red-200 text-red-900 hover:bg-red-300' },
+  { label: 'Off-Topic/Looping', value: 'off_topic_loop', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
+  { label: 'Slow/High Latency', value: 'latency', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
+  { label: 'Audio Quality (TTS)', value: 'audio_quality', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
+  { label: 'Mic/ASR Errors', value: 'asr_error', color: 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200' },
+  { label: 'Accent/Language Mismatch', value: 'lang_mismatch', color: 'bg-pink-100 text-pink-800 hover:bg-pink-200' },
+  { label: 'Background Noise', value: 'background_noise', color: 'bg-teal-100 text-teal-800 hover:bg-teal-200' },
+  { label: 'Rude/Unsafe Content', value: 'unsafe_content', color: 'bg-purple-100 text-purple-800 hover:bg-purple-200' },
+  { label: 'Policy Violation', value: 'policy_violation', color: 'bg-red-300 text-red-900 hover:bg-red-400' },
+  { label: 'Action Failed (API)', value: 'action_failed', color: 'bg-orange-200 text-orange-900 hover:bg-orange-300' },
+  { label: 'Wrong Route/Workflow', value: 'routing_error', color: 'bg-yellow-200 text-yellow-900 hover:bg-yellow-300' },
+  { label: 'UI/Controls Issue', value: 'ui_issue', color: 'bg-gray-100 text-gray-800 hover:bg-gray-200' },
+  { label: 'Payment/Access Issue', value: 'access_issue', color: 'bg-slate-100 text-slate-800 hover:bg-slate-200' },
 ];
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({ 

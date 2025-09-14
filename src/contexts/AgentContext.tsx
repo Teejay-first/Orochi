@@ -43,6 +43,10 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     voice: row.voice,
     model: row.model,
     status_type: row.status_type || 'deployed',
+    rating: row.rating || 0,
+    total_thumbs_up: row.total_thumbs_up || 0,
+    total_thumbs_down: row.total_thumbs_down || 0,
+    total_ratings: row.total_ratings || 0,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime()
   });

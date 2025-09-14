@@ -61,7 +61,7 @@ export const SessionRating: React.FC<SessionRatingProps> = ({
       setHasRated(true);
       toast({
         title: "Rating submitted",
-        description: "Thank you for your feedback!",
+        description: "Thank you for your feedback! This helps us improve the agent experience.",
       });
     } catch (error) {
       console.error('Error submitting rating:', error);
