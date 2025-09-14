@@ -30,8 +30,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
     <Card className="group relative overflow-hidden border-border/40 bg-gradient-card hover:border-primary/30 transition-smooth shadow-card hover:shadow-glow">
       <CardContent className="p-6 flex flex-col h-full">
         <div className="flex items-start gap-4 flex-1">
-          <div className="flex flex-col items-center">
-            <div className="relative flex-shrink-0">
+          <div className="flex flex-col">
+            <div className="relative flex-shrink-0 mb-2">
               <img
                 src={agent.avatarUrl}
                 alt={agent.name}
@@ -40,6 +40,24 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-status-deployed rounded-full border-2 border-card" />
             </div>
             
+            {/* Star rating positioned below avatar */}
+            {agent.average_rating !== undefined && (
+              <div className="mb-2">
+                <StarRating rating={agent.average_rating} count={agent.total_ratings} />
+              </div>
+            )}
+            
+            {/* Popularity score and price below the stars */}
+            <div className="flex flex-col gap-1">
+              {agent.rating !== undefined && agent.rating > 0 && (
+                <PopularityScore score={agent.rating} />
+              )}
+              {agent.agent_price && (
+                <Badge className="text-xs font-medium bg-price-green text-price-green-foreground w-fit">
+                  {PRICE_TYPES.find(p => p.value === agent.agent_price)?.symbol || '$'}
+                </Badge>
+              )}
+            </div>
           </div>
           
           <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -69,28 +87,6 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               <Badge variant="secondary" className="text-xs">
                 {agent.category}
               </Badge>
-              {/* Star rating on same level as badges */}
-              {agent.average_rating !== undefined && (
-                <div className="ml-1">
-                  <StarRating rating={agent.average_rating} count={agent.total_ratings} />
-                </div>
-              )}
-            </div>
-            
-            {/* Popularity score and price under the star rating */}
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                {agent.rating !== undefined && agent.rating > 0 && (
-                  <PopularityScore score={agent.rating} />
-                )}
-              </div>
-              <div>
-                {agent.agent_price && (
-                  <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
-                    {PRICE_TYPES.find(p => p.value === agent.agent_price)?.symbol || '$'}
-                  </Badge>
-                )}
-              </div>
             </div>
             
             {agent.language.length > 1 && (
