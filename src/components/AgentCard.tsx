@@ -42,17 +42,16 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             
             {/* Star rating positioned below avatar */}
             {agent.average_rating !== undefined && (
-              <div className="mb-2">
+              <div className="mt-3 mb-2">
                 <StarRating rating={agent.average_rating} count={agent.total_ratings} />
               </div>
             )}
             
-            {/* Popularity score and price below the stars */}
-            <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2">
               {agent.rating !== undefined && agent.rating > 0 && (
                 <PopularityScore score={agent.rating} />
               )}
-              {agent.agent_price && (
+              {typeof agent.agent_price === 'number' && (
                 <Badge className="text-xs font-medium bg-price-green text-price-green-foreground w-fit">
                   {PRICE_TYPES.find(p => p.value === agent.agent_price)?.symbol || '$'}
                 </Badge>

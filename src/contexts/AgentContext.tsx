@@ -48,6 +48,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     total_thumbs_up: row.total_thumbs_up || 0,
     total_thumbs_down: row.total_thumbs_down || 0,
     total_ratings: row.total_ratings || 0,
+    agent_price: typeof row.agent_price === 'number' ? row.agent_price : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime()
   });
@@ -64,7 +65,8 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     prompt_id: agent.prompt_id,
     voice: agent.voice,
     model: agent.model,
-    status_type: agent.status_type
+    status_type: agent.status_type,
+    agent_price: agent.agent_price,
   });
 
   // Load agents from database on mount
