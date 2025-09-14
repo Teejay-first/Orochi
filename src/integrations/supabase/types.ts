@@ -183,6 +183,10 @@ export type Database = {
         Args: { code_to_use: string }
         Returns: Json
       }
+      validate_invite_code: {
+        Args: { code_to_check: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
