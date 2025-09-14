@@ -20,10 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
   const { agents, addAgent, updateAgent, deleteAgent, duplicateAgent, exportAgents, importAgents } = useAgents();
-  const { signOut } = useAuth();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
-  const [password, setPassword] = useState('');
+  const { signOut, isSuperAdmin, userProfile } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [formData, setFormData] = useState({
@@ -38,30 +35,6 @@ export const Admin: React.FC = () => {
     voice: 'alloy',
     model: 'gpt-realtime-2025-08-28',
   });
-
-  const handleLogin = () => {
-    if (password === 'adminx66') {
-      setIsAuthenticated(true);
-      setIsMasterAdmin(true);
-      toast({
-        title: "Master Admin Access Granted",
-        description: "Welcome to VoiceTube Master Admin Panel",
-      });
-    } else if (password === 'admin45') {
-      setIsAuthenticated(true);
-      setIsMasterAdmin(false);
-      toast({
-        title: "Admin Access Granted", 
-        description: "Welcome to VoiceTube Admin Panel",
-      });
-    } else {
-      toast({
-        title: "Access Denied",
-        description: "Invalid password",
-        variant: "destructive",
-      });
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -141,20 +114,16 @@ export const Admin: React.FC = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    const superAdminPassword = prompt(
-      `⚠️ Agent deletion requires super admin authorization.\n\nEnter super admin password to delete "${name}":`
-    );
-    
-    if (superAdminPassword !== 'adminx1') {
+    if (!isSuperAdmin) {
       toast({
         title: "Access Denied",
-        description: "Invalid super admin password. Agent deletion cancelled.",
+        description: "Only super administrators can delete agents.",
         variant: "destructive",
       });
       return;
     }
     
-    if (confirm(`🚨 FINAL CONFIRMATION: Delete "${name}" permanently?`)) {
+    if (confirm(`🚨 CONFIRMATION: Delete "${name}" permanently?`)) {
       await deleteAgent(id);
       toast({
         title: "Agent Deleted",
@@ -220,37 +189,6 @@ export const Admin: React.FC = () => {
     });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Admin Access</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Enter admin password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-            />
-            <Button onClick={handleLogin} className="w-full">
-              Login
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
-              className="w-full"
-            >
-              Back to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm p-4">
@@ -265,7 +203,7 @@ export const Admin: React.FC = () => {
               Back to Home
             </Button>
             <h1 className="text-2xl font-bold">
-              VoiceTube Admin {isMasterAdmin && <span className="text-primary">(Master)</span>}
+              Voice AI Agents Directory Admin {isSuperAdmin && <span className="text-primary">(Super Admin)</span>}
             </h1>
           </div>
           
@@ -501,7 +439,7 @@ export const Admin: React.FC = () => {
                             >
                               <Copy className="w-4 h-4" />
                             </Button>
-                            {isMasterAdmin && (
+                            {isSuperAdmin && (
                               <Button
                                 size="sm"
                                 variant="ghost"
