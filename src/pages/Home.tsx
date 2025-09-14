@@ -7,7 +7,7 @@ import { FilterPanel } from '@/components/FilterPanel';
 import { UserDisplay } from '@/components/UserDisplay';
 import { SortDropdown, SortOption, TimeFilter } from '@/components/SortDropdown';
 import { Button } from '@/components/ui/button';
-import { Settings, Waves, Plus, Linkedin, Mail } from 'lucide-react';
+import { Settings, Waves, Plus, MessageSquare, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Home: React.FC = () => {
@@ -205,10 +205,20 @@ export const Home: React.FC = () => {
                 The trusted place to discover, test, and rank voice AI agents with curated listings, live demos, public scores, and easy submissions.
               </p>
               <div className="flex gap-4">
-                <Button variant="ghost" size="sm" className="p-2">
-                  <Linkedin className="w-5 h-5" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2"
+                  onClick={() => window.open('https://discord.gg/6Se9nUBBgX', '_blank')}
+                >
+                  <MessageSquare className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="sm" className="p-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2"
+                  onClick={() => window.open('mailto:team@voiceagents.directory', '_blank')}
+                >
                   <Mail className="w-5 h-5" />
                 </Button>
               </div>
@@ -297,7 +307,10 @@ export const Home: React.FC = () => {
 
           <div className="border-t border-border/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
             <div>© 2025 Voice AI Directory. All rights reserved.</div>
-            <div className="mt-2 md:mt-0">Built with care for voice AI aficionados.</div>
+            <div className="mt-2 md:mt-0 text-center md:text-right">
+              <div>The scoreboard for Voice AI.</div>
+              <div>If it talks, we test it.</div>
+            </div>
           </div>
         </div>
       </footer>
