@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { RatingDisplay } from '@/components/RatingDisplay';
+import { StarRating } from '@/components/StarRating';
+import { PopularityScore } from '@/components/PopularityScore';
 
 interface AgentCardProps {
   agent: Agent;
@@ -36,6 +37,16 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               className="w-16 h-16 rounded-full object-cover ring-2 ring-border group-hover:ring-primary/50 transition-smooth"
             />
             <div className="absolute -bottom-1 -right-1 voice-indicator" />
+            
+            {/* Rating section moved under avatar */}
+            <div className="mt-2 flex flex-col items-center gap-1">
+              {agent.average_rating !== undefined && agent.average_rating > 0 && (
+                <StarRating rating={agent.average_rating} />
+              )}
+              {agent.rating !== undefined && agent.rating > 0 && (
+                <PopularityScore score={agent.rating} />
+              )}
+            </div>
           </div>
           
           <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -48,28 +59,23 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               </p>
             </div>
             
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-1 flex-wrap">
-                <Badge 
-                  className={`text-xs font-medium ${
-                    agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
-                    agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
-                    agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
-                    'bg-status-repairing text-status-repairing-foreground'
-                  }`}
-                >
-                  {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {agent.language[0]}
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {agent.category}
-                </Badge>
-              </div>
-              {agent.rating !== undefined && agent.rating > 0 && (
-                <RatingDisplay rating={agent.rating} />
-              )}
+            <div className="flex items-center gap-1 flex-wrap mb-2">
+              <Badge 
+                className={`text-xs font-medium ${
+                  agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
+                  agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
+                  agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
+                  'bg-status-repairing text-status-repairing-foreground'
+                }`}
+              >
+                {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {agent.language[0]}
+              </Badge>
+              <Badge variant="secondary" className="text-xs">
+                {agent.category}
+              </Badge>
             </div>
             
             {agent.language.length > 1 && (

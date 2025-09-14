@@ -274,6 +274,7 @@ export type Database = {
         Row: {
           access_mode: string | null
           avatar_url: string
+          average_rating: number | null
           category: string
           created_at: string
           id: string
@@ -305,6 +306,7 @@ export type Database = {
         Insert: {
           access_mode?: string | null
           avatar_url: string
+          average_rating?: number | null
           category: string
           created_at?: string
           id?: string
@@ -336,6 +338,7 @@ export type Database = {
         Update: {
           access_mode?: string | null
           avatar_url?: string
+          average_rating?: number | null
           category?: string
           created_at?: string
           id?: string

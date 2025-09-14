@@ -19,7 +19,7 @@ export const Home: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('all');
 
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [sortBy, setSortBy] = useState<SortOption>('rating_desc');
+  const [sortBy, setSortBy] = useState<SortOption>('average_rating_desc');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
 
   const filteredAgents = useMemo(() => {
@@ -40,6 +40,10 @@ export const Home: React.FC = () => {
     const filtered = [...filteredAgents];
     
     switch (sortBy) {
+      case 'average_rating_desc':
+        return filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+      case 'average_rating_asc':
+        return filtered.sort((a, b) => (a.average_rating || 0) - (b.average_rating || 0));
       case 'rating_desc':
         return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       case 'rating_asc':
@@ -62,7 +66,7 @@ export const Home: React.FC = () => {
     setSelectedLanguage('all');
     setSelectedStatus('all');
     setSearchQuery('');
-    setSortBy('rating_desc');
+    setSortBy('average_rating_desc');
     setTimeFilter('all');
   };
 

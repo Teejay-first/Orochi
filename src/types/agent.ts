@@ -11,7 +11,8 @@ export interface Agent {
   voice: string;
   model: string;
   status_type: 'deployed' | 'testing' | 'building' | 'repairing';
-  rating?: number;
+  rating?: number; // This is now the popularity score (thumbs up - thumbs down)
+  average_rating?: number; // This is the new 5-star average rating
   total_thumbs_up?: number;
   total_thumbs_down?: number;
   total_ratings?: number;

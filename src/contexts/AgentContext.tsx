@@ -43,7 +43,8 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     voice: row.voice,
     model: row.model,
     status_type: row.status_type || 'deployed',
-    rating: row.rating || 0,
+    rating: row.rating || 0, // popularity score
+    average_rating: row.average_rating || 0, // 5-star average
     total_thumbs_up: row.total_thumbs_up || 0,
     total_thumbs_down: row.total_thumbs_down || 0,
     total_ratings: row.total_ratings || 0,

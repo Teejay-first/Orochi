@@ -2,7 +2,7 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, Calendar } from 'lucide-react';
 
-export type SortOption = 'rating_desc' | 'rating_asc' | 'name_asc' | 'name_desc' | 'newest' | 'oldest';
+export type SortOption = 'average_rating_desc' | 'average_rating_asc' | 'rating_desc' | 'rating_asc' | 'name_asc' | 'name_desc' | 'newest' | 'oldest';
 export type TimeFilter = 'all' | 'year' | 'quarter' | 'month' | 'week' | 'day';
 
 interface SortDropdownProps {
@@ -27,18 +27,20 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="rating_desc">
+          <SelectItem value="average_rating_desc">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4" />
-              Most Stars
+              Highest Rated (5⭐)
             </div>
           </SelectItem>
-          <SelectItem value="rating_asc">
+          <SelectItem value="average_rating_asc">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4" />
-              Least Stars
+              Lowest Rated (5⭐)
             </div>
           </SelectItem>
+          <SelectItem value="rating_desc">Most Popular</SelectItem>
+          <SelectItem value="rating_asc">Least Popular</SelectItem>
           <SelectItem value="name_asc">A-Z</SelectItem>
           <SelectItem value="name_desc">Z-A</SelectItem>
           <SelectItem value="newest">Newest</SelectItem>
@@ -46,7 +48,7 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({
         </SelectContent>
       </Select>
 
-      {sortBy.includes('rating') && (
+      {(sortBy === 'average_rating_desc' || sortBy === 'average_rating_asc') && (
         <Select value={timeFilter} onValueChange={onTimeFilterChange}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Time period..." />
