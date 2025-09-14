@@ -27,6 +27,7 @@ export const Auth: React.FC = () => {
     );
   }
 
+  // Redirect authenticated users to intended page
   if (isAuthenticated) {
     return <Navigate to={redirectTo} replace />;
   }

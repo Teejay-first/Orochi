@@ -3,10 +3,38 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+interface UserRoles {
+  isAdmin: boolean;
+  isSuper: boolean;
+}
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [roles, setRoles] = useState<UserRoles>({ isAdmin: false, isSuper: false });
   const [loading, setLoading] = useState(true);
+
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', userId)
+        .single();
+      
+      if (!error && data) {
+        setRoles({
+          isAdmin: data.is_admin || data.is_super_admin,
+          isSuper: data.is_super_admin
+        });
+      } else {
+        setRoles({ isAdmin: false, isSuper: false });
+      }
+    } catch (err) {
+      console.error('Error fetching user roles:', err);
+      setRoles({ isAdmin: false, isSuper: false });
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -15,6 +43,14 @@ export const useAuth = () => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Fetch roles when user logs in/out
+        if (session?.user) {
+          setTimeout(() => fetchUserRoles(session.user.id), 0);
+        } else {
+          setRoles({ isAdmin: false, isSuper: false });
+        }
+        
         setLoading(false);
       }
     );
@@ -23,6 +59,12 @@ export const useAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Fetch roles if user exists
+      if (session?.user) {
+        setTimeout(() => fetchUserRoles(session.user.id), 0);
+      }
+      
       setLoading(false);
     });
 
@@ -133,6 +175,7 @@ export const useAuth = () => {
   return {
     user,
     session,
+    roles,
     loading,
     signInWithGoogle,
     signInWithInviteCode,
