@@ -80,7 +80,7 @@ export const Home: React.FC = () => {
               <div className="p-2 rounded-lg gradient-primary">
                 <Waves className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-semibold gradient-hero bg-clip-text text-transparent">
+              <span className="text-xl font-semibold text-foreground">
                 Voice AI Agents Directory
               </span>
             </div>
@@ -103,16 +103,16 @@ export const Home: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-card border-b border-border/20">
+      <section className="border-b border-border/20 bg-card/30">
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
             <span className="block">
-              <em className="not-italic gradient-hero bg-clip-text text-transparent">Your</em>{' '}
+              <span className="text-primary">Your</span>{' '}
               <span className="text-foreground">Hub to Discover</span>
             </span>
             <span className="block">
               <span className="text-foreground">the Best</span>{' '}
-              <em className="not-italic gradient-hero bg-clip-text text-transparent">Voice AI Agents</em>
+              <span className="text-primary">Voice AI Agents</span>
             </span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
