@@ -37,7 +37,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
                 alt={agent.name}
                 className="w-16 h-16 rounded-full object-cover ring-2 ring-border group-hover:ring-primary/50 transition-smooth"
               />
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-status-deployed rounded-full border-2 border-card" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-status-deployed rounded-full border-2 border-card animate-pulse" />
             </div>
             
             {/* Star rating positioned below avatar */}
@@ -47,14 +47,14 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               </div>
             )}
             
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
               {agent.rating !== undefined && agent.rating > 0 && (
                 <PopularityScore score={agent.rating} />
               )}
               {typeof agent.agent_price === 'number' && (
-                <Badge className="text-xs font-medium bg-price-green text-price-green-foreground w-fit">
+                <span className="text-xs text-muted-foreground">
                   {PRICE_TYPES.find(p => p.value === agent.agent_price)?.symbol || '$'}
-                </Badge>
+                </span>
               )}
             </div>
           </div>

@@ -74,15 +74,15 @@ export const Home: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg gradient-primary">
                 <Waves className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold gradient-hero bg-clip-text text-transparent">
+              <span className="text-xl font-semibold gradient-hero bg-clip-text text-transparent">
                 Voice AI Agents Directory
-              </h1>
+              </span>
             </div>
             
             <div className="flex items-center gap-2">
@@ -98,6 +98,19 @@ export const Home: React.FC = () => {
                 </Button>
               )}
             </div>
+          </div>
+          
+          {/* Hero section */}
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2">
+              <span className="gradient-hero bg-clip-text text-transparent">Your Hub to Discover</span>
+            </h1>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              <span className="gradient-hero bg-clip-text text-transparent">the Best Voice AI Agents</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Test live voice agents side-by-side. Rank them. Submit yours.
+            </p>
           </div>
         </div>
       </header>
