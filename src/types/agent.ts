@@ -72,7 +72,7 @@ export const VOICES = [
 ] as const;
 
 export const STATUS_TYPES = [
-  { value: 'deployed', label: 'Deployed', color: 'status-deployed' },
+  { value: 'deployed', label: 'Running', color: 'status-deployed' },
   { value: 'testing', label: 'Testing', color: 'status-testing' },
   { value: 'building', label: 'Building', color: 'status-building' },
   { value: 'repairing', label: 'Repairing', color: 'status-repairing' }

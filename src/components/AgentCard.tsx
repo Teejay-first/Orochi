@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Agent } from '@/types/agent';
+import { Agent, STATUS_TYPES } from '@/types/agent';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -60,7 +60,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
                   'bg-status-repairing text-status-repairing-foreground'
                 }`}
               >
-                {agent.status_type.charAt(0).toUpperCase() + agent.status_type.slice(1)}
+                {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
               </Badge>
             </div>
           </div>

@@ -192,6 +192,14 @@ export const Admin: React.FC = () => {
     });
   };
 
+  const handleStatusChange = async (agentId: string, newStatus: Agent['status_type']) => {
+    await updateAgent(agentId, { status_type: newStatus });
+    toast({
+      title: "Status Updated",
+      description: `Agent status changed to ${STATUS_TYPES.find(s => s.value === newStatus)?.label}`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm p-4">
@@ -437,16 +445,36 @@ export const Admin: React.FC = () => {
                           <Badge variant="outline" className="text-xs">{agent.language}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            className={`text-xs font-medium ${
-                              agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
-                              agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
-                              agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
-                              'bg-status-repairing text-status-repairing-foreground'
-                            }`}
+                          <Select 
+                            value={agent.status_type} 
+                            onValueChange={(value: Agent['status_type']) => handleStatusChange(agent.id, value)}
                           >
-                            {agent.status_type.charAt(0).toUpperCase() + agent.status_type.slice(1)}
-                          </Badge>
+                            <SelectTrigger className="w-32 h-8 text-xs">
+                              <SelectValue>
+                                <Badge 
+                                  className={`text-xs font-medium ${
+                                    agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
+                                    agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
+                                    agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
+                                    'bg-status-repairing text-status-repairing-foreground'
+                                  }`}
+                                >
+                                  {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
+                                </Badge>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_TYPES.map((status) => (
+                                <SelectItem key={status.value} value={status.value}>
+                                  <Badge 
+                                    className={`text-xs font-medium bg-${status.color} text-${status.color}-foreground`}
+                                  >
+                                    {status.label}
+                                  </Badge>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           <Badge variant={agent.prompt_source === 'text' ? 'default' : 'secondary'} className="text-xs">
