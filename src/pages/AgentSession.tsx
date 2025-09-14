@@ -147,7 +147,9 @@ export const AgentSession: React.FC = () => {
             return [...prev, message];
           });
         },
-        setSessionStatus
+        setSessionStatus,
+        agent.id,
+        user?.id
       );
       
       await realtimeChatRef.current.init(selectedVoice, { 

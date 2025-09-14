@@ -1,8 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,7 @@ import {
 
 export const UserDisplay: React.FC = () => {
   const { user, session, signOut, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated || !user) {
     return null;
@@ -65,6 +67,10 @@ export const UserDisplay: React.FC = () => {
           </div>
         </div>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate('/conversations')} className="cursor-pointer">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          My Conversations
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           Sign out

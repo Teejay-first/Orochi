@@ -8,6 +8,14 @@ export interface RealtimeMessage {
   isPartial?: boolean;
 }
 
+export interface ConversationTurn {
+  user_text: string;
+  assistant_text: string;
+  input_tokens: number;
+  output_tokens: number;
+  cached_input_tokens: number;
+}
+
 export class RealtimeChat {
   private pc: RTCPeerConnection | null = null;
   private dc: RTCDataChannel | null = null;
@@ -16,10 +24,17 @@ export class RealtimeChat {
   private sessionInstructions?: string;
   private sessionPromptId?: string;
   private sessionModel: string = 'gpt-realtime-2025-08-28';
+  private conversationId: string | null = null;
+  private currentTurn: Partial<ConversationTurn> = {};
+  private userTextBuffer: string = '';
+  private assistantTextBuffer: string = '';
+  private turnIndex: number = 0;
 
   constructor(
     private onMessage: (message: RealtimeMessage) => void,
-    private onStatusChange: (status: 'idle' | 'connecting' | 'connected' | 'ended') => void
+    private onStatusChange: (status: 'idle' | 'connecting' | 'connected' | 'ended') => void,
+    private agentId?: string,
+    private userId?: string
   ) {
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
@@ -86,6 +101,9 @@ export class RealtimeChat {
         console.log("Data channel opened");
         this.onStatusChange('connected');
         
+        // Create conversation record
+        this.createConversationRecord();
+        
         // Send initial message
         this.onMessage({
           id: Date.now().toString(),
@@ -139,20 +157,62 @@ export class RealtimeChat {
       case 'session.created': {
         console.log('Session created event received');
         if (this.dc) {
+          // Configure session with input transcription enabled
+          const sessionUpdate = {
+            type: 'session.update',
+            session: {
+              input_audio_transcription: {
+                enabled: true
+              },
+              instructions: this.sessionInstructions || "You are a helpful assistant."
+            }
+          };
+
           if (this.sessionPromptId) {
-            this.dc.send(JSON.stringify({
-              type: 'session.update',
-              session: { prompt: { id: this.sessionPromptId } }
-            }));
-            console.log('Applied hosted prompt via session.update:', this.sessionPromptId);
-          } else if (this.sessionInstructions) {
-            this.dc.send(JSON.stringify({
-              type: 'session.update',
-              session: { instructions: this.sessionInstructions }
-            }));
-            console.log('Applied instructions via session.update');
+            sessionUpdate.session.instructions = `Use prompt ID: ${this.sessionPromptId}. ${sessionUpdate.session.instructions}`;
           }
+
+          this.dc.send(JSON.stringify(sessionUpdate));
+          console.log('Applied session update with transcription enabled');
         }
+        break;
+      }
+      
+      case 'input_audio_transcription.delta': {
+        console.log('User audio transcription delta:', event.delta);
+        this.userTextBuffer += event.delta || '';
+        break;
+      }
+      
+      case 'input_audio_transcription.completed': {
+        console.log('User audio transcription completed:', event.transcript);
+        this.userTextBuffer = event.transcript || this.userTextBuffer;
+        break;
+      }
+      
+      case 'response.output_item.added': {
+        if (event.item?.type === 'message') {
+          console.log('Response output item added');
+        }
+        break;
+      }
+      
+      case 'response.text.delta': {
+        console.log('Assistant text delta:', event.delta);
+        this.assistantTextBuffer += event.delta || '';
+        this.onMessage({
+          id: event.response_id || Date.now().toString(),
+          type: 'agent',
+          content: event.delta || '',
+          timestamp: Date.now(),
+          isPartial: true,
+        });
+        break;
+      }
+      
+      case 'response.done': {
+        console.log('Response completed:', event);
+        this.handleResponseCompleted(event);
         break;
       }
       case 'conversation.item.created':
@@ -231,8 +291,117 @@ export class RealtimeChat {
     });
   }
 
-  disconnect() {
+  private async createConversationRecord() {
+    if (!this.userId || !this.agentId) {
+      console.warn('Missing userId or agentId for conversation record');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('conversation_sessions')
+        .insert({
+          user_id: this.userId,
+          agent_id: this.agentId,
+          model: this.sessionModel,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      this.conversationId = data.id;
+      console.log('Created conversation record:', data.id);
+    } catch (error) {
+      console.error('Failed to create conversation record:', error);
+    }
+  }
+
+  private async handleResponseCompleted(event: any) {
+    console.log('Processing completed response with usage:', event.response?.usage);
+    
+    // Save the current turn if we have text
+    if (this.userTextBuffer.trim() || this.assistantTextBuffer.trim()) {
+      await this.saveTurn();
+    }
+
+    // Update conversation totals
+    await this.updateConversationStats(event.response?.usage);
+    
+    // Reset buffers for next turn
+    this.userTextBuffer = '';
+    this.assistantTextBuffer = '';
+  }
+
+  private async saveTurn() {
+    if (!this.conversationId) {
+      console.warn('No conversation ID for turn saving');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('conversation_turns')
+        .insert({
+          conversation_id: this.conversationId,
+          turn_index: this.turnIndex++,
+          user_text: this.userTextBuffer.trim(),
+          assistant_text: this.assistantTextBuffer.trim(),
+          input_tokens: this.currentTurn.input_tokens || 0,
+          output_tokens: this.currentTurn.output_tokens || 0,
+          cached_input_tokens: this.currentTurn.cached_input_tokens || 0
+        });
+
+      if (error) throw error;
+      
+      console.log('Saved turn:', this.turnIndex - 1);
+      
+      // Reset current turn
+      this.currentTurn = {};
+    } catch (error) {
+      console.error('Failed to save turn:', error);
+    }
+  }
+
+  private async updateConversationStats(usage?: any) {
+    if (!this.conversationId || !usage) return;
+
+    try {
+      const { error } = await supabase
+        .from('conversation_sessions')
+        .update({
+          turns: this.turnIndex,
+          input_tokens: usage.input_tokens || 0,
+          output_tokens: usage.output_tokens || 0,
+          cached_input_tokens: usage.input_token_details?.cached_tokens || 0,
+          total_tokens: (usage.input_tokens || 0) + (usage.output_tokens || 0)
+        })
+        .eq('id', this.conversationId);
+
+      if (error) throw error;
+      
+      console.log('Updated conversation stats');
+    } catch (error) {
+      console.error('Failed to update conversation stats:', error);
+    }
+  }
+
+  async disconnect() {
     console.log("Disconnecting...");
+    
+    // Save final conversation state
+    if (this.conversationId) {
+      const duration = Date.now();
+      await supabase
+        .from('conversation_sessions')
+        .update({
+          status: 'completed',
+          ended_at: new Date().toISOString(),
+          duration_ms: duration
+        })
+        .eq('id', this.conversationId);
+    }
     
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
