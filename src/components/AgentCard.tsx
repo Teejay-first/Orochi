@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Agent, STATUS_TYPES } from '@/types/agent';
+import { Agent, STATUS_TYPES, PRICE_TYPES } from '@/types/agent';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,12 +40,6 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-status-deployed rounded-full border-2 border-card" />
             </div>
             
-            {/* Thumbs up score moved under avatar */}
-            <div className="mt-2">
-              {agent.rating !== undefined && agent.rating > 0 && (
-                <PopularityScore score={agent.rating} />
-              )}
-            </div>
           </div>
           
           <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -69,23 +63,34 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               >
                 {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
               </Badge>
-              {agent.agent_price && (
-                <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
-                  {agent.agent_price === 'budget' ? '$' : agent.agent_price === 'standard' ? '$$' : '$$$'}
-                </Badge>
-              )}
               <Badge variant="outline" className="text-xs">
                 {agent.language[0]}
               </Badge>
               <Badge variant="secondary" className="text-xs">
                 {agent.category}
               </Badge>
-              {/* Star rating moved to align with badges */}
+              {/* Star rating on same level as badges */}
               {agent.average_rating !== undefined && (
                 <div className="ml-1">
                   <StarRating rating={agent.average_rating} count={agent.total_ratings} />
                 </div>
               )}
+            </div>
+            
+            {/* Popularity score and price under the star rating */}
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                {agent.rating !== undefined && agent.rating > 0 && (
+                  <PopularityScore score={agent.rating} />
+                )}
+              </div>
+              <div>
+                {agent.agent_price && (
+                  <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
+                    {PRICE_TYPES.find(p => p.value === agent.agent_price)?.symbol || '$'}
+                  </Badge>
+                )}
+              </div>
             </div>
             
             {agent.language.length > 1 && (

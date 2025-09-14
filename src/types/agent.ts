@@ -11,7 +11,7 @@ export interface Agent {
   voice: string;
   model: string;
   status_type: 'deployed' | 'testing' | 'building' | 'repairing';
-  agent_price?: 'budget' | 'standard' | 'premium';
+  agent_price?: number; // 1-4 representing $, $$, $$$, $$$$
   rating?: number; // This is now the popularity score (thumbs up - thumbs down)
   average_rating?: number; // This is the new 5-star average rating
   total_thumbs_up?: number;
@@ -85,7 +85,8 @@ export const STATUS_TYPES = [
 ] as const;
 
 export const PRICE_TYPES = [
-  { value: 'budget', label: 'Budget', symbol: '$' },
-  { value: 'standard', label: 'Standard', symbol: '$$' },
-  { value: 'premium', label: 'Premium', symbol: '$$$' }
+  { value: 1, label: '$', symbol: '$' },
+  { value: 2, label: '$$', symbol: '$$' },
+  { value: 3, label: '$$$', symbol: '$$$' },
+  { value: 4, label: '$$$$', symbol: '$$$$' }
 ] as const;

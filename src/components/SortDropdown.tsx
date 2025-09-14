@@ -29,14 +29,12 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({
         <SelectContent>
           <SelectItem value="average_rating_desc">
             <div className="flex items-center gap-2">
-              <Star className="w-4 h-4" />
-              Highest Rated (5⭐)
+              Highest ⭐⭐⭐⭐⭐
             </div>
           </SelectItem>
           <SelectItem value="average_rating_asc">
             <div className="flex items-center gap-2">
-              <Star className="w-4 h-4" />
-              Lowest Rated (5⭐)
+              Lowest ⭐
             </div>
           </SelectItem>
           <SelectItem value="rating_desc">Most Popular</SelectItem>
