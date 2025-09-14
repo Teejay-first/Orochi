@@ -13,6 +13,7 @@ import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { SessionRating } from '@/components/SessionRating';
 
 type SessionStatus = 'idle' | 'connecting' | 'connected' | 'ended';
 
@@ -335,15 +336,32 @@ export const AgentSession: React.FC = () => {
                 )}
                 
                 {sessionStatus === 'ended' && (
-                  <Button onClick={() => navigate('/')} variant="outline">
-                    Return Home
-                  </Button>
+                  <div className="flex flex-col items-center gap-4">
+                    <Button onClick={() => navigate('/')} variant="outline">
+                      Return Home
+                    </Button>
+                    <SessionRating 
+                      agentId={agent.id} 
+                      sessionId={conversationIdRef.current || undefined}
+                    />
+                  </div>
                 )}
               </div>
               
               <div className="text-center text-sm text-muted-foreground">
                 Status: <span className="capitalize font-medium">{sessionStatus}</span>
               </div>
+              
+              {/* Rating Section - Show during connected sessions */}
+              {sessionStatus === 'connected' && (
+                <div className="mt-4 pt-4 border-t border-border/40">
+                  <SessionRating 
+                    agentId={agent.id} 
+                    sessionId={conversationIdRef.current || undefined}
+                    className="justify-center"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
