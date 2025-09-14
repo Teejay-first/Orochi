@@ -66,7 +66,12 @@ export const Conversations = () => {
         .eq('user_id', user?.id)
         .order('started_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Fetched conversations:', data);
       setConversations(data || []);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -93,6 +98,8 @@ export const Conversations = () => {
 
   const formatDuration = (ms?: number) => {
     if (!ms) return 'N/A';
+    // Handle extremely large duration values (likely calculation errors)
+    if (ms > 86400000) return 'Invalid duration'; // More than 24 hours
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     return `${minutes}m ${seconds % 60}s`;
@@ -244,12 +251,20 @@ export const Conversations = () => {
                     <TableRow key={conversation.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <img
-                            src={conversation.agents?.avatar_url}
-                            alt={conversation.agents?.name}
-                            className="h-8 w-8 rounded-full object-cover"
-                          />
-                          <span className="font-medium">{conversation.agents?.name}</span>
+                          {conversation.agents?.avatar_url ? (
+                            <img
+                              src={conversation.agents.avatar_url}
+                              alt={conversation.agents.name}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span className="font-medium">
+                            {conversation.agents?.name || 'Unknown Agent'}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>{formatDate(conversation.started_at)}</TableCell>

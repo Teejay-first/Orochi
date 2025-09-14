@@ -29,6 +29,7 @@ export class RealtimeChat {
   private userTextBuffer: string = '';
   private assistantTextBuffer: string = '';
   private turnIndex: number = 0;
+  private sessionStartTime: number | null = null;
 
   constructor(
     private onMessage: (message: RealtimeMessage) => void,
@@ -44,6 +45,8 @@ export class RealtimeChat {
   async init(agentVoice: string, options?: { instructions?: string; promptId?: string; model?: string }) {
     try {
       this.onStatusChange('connecting');
+      this.sessionStartTime = Date.now(); // Track session start time
+      
       // Persist session options for later session.update
       this.sessionInstructions = options?.instructions;
       this.sessionPromptId = options?.promptId;
@@ -321,20 +324,22 @@ export class RealtimeChat {
   private async handleResponseCompleted(event: any) {
     console.log('Processing completed response with usage:', event.response?.usage);
     
-    // Save the current turn if we have text
-    if (this.userTextBuffer.trim() || this.assistantTextBuffer.trim()) {
-      await this.saveTurn();
+    const usage = event.response?.usage;
+    
+    // Save the current turn if we have text or usage info
+    if (this.userTextBuffer.trim() || this.assistantTextBuffer.trim() || usage) {
+      await this.saveTurn(usage);
     }
 
     // Update conversation totals
-    await this.updateConversationStats(event.response?.usage);
+    await this.updateConversationStats(usage);
     
     // Reset buffers for next turn
     this.userTextBuffer = '';
     this.assistantTextBuffer = '';
   }
 
-  private async saveTurn() {
+  private async saveTurn(usage?: any) {
     if (!this.conversationId) {
       console.warn('No conversation ID for turn saving');
       return;
@@ -348,14 +353,14 @@ export class RealtimeChat {
           turn_index: this.turnIndex++,
           user_text: this.userTextBuffer.trim(),
           assistant_text: this.assistantTextBuffer.trim(),
-          input_tokens: this.currentTurn.input_tokens || 0,
-          output_tokens: this.currentTurn.output_tokens || 0,
-          cached_input_tokens: this.currentTurn.cached_input_tokens || 0
+          input_tokens: usage?.input_tokens || 0,
+          output_tokens: usage?.output_tokens || 0,
+          cached_input_tokens: usage?.input_token_details?.cached_tokens || 0
         });
 
       if (error) throw error;
       
-      console.log('Saved turn:', this.turnIndex - 1);
+      console.log('Saved turn:', this.turnIndex - 1, 'with usage:', usage);
       
       // Reset current turn
       this.currentTurn = {};
@@ -390,17 +395,22 @@ export class RealtimeChat {
   async disconnect() {
     console.log("Disconnecting...");
     
+    // Calculate actual duration
+    const actualDuration = this.sessionStartTime ? Date.now() - this.sessionStartTime : 0;
+    console.log('Session duration:', actualDuration, 'ms');
+    
     // Save final conversation state
     if (this.conversationId) {
-      const duration = Date.now();
       await supabase
         .from('conversation_sessions')
         .update({
           status: 'completed',
           ended_at: new Date().toISOString(),
-          duration_ms: duration
+          duration_ms: actualDuration
         })
         .eq('id', this.conversationId);
+      
+      console.log('Updated conversation with final duration:', actualDuration);
     }
     
     if (this.localStream) {
