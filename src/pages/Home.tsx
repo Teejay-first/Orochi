@@ -45,7 +45,7 @@ export const Home: React.FC = () => {
                 <Waves className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold gradient-hero bg-clip-text text-transparent">
-                VoiceTube
+                Voice AI Agents Directory
               </h1>
             </div>
             
