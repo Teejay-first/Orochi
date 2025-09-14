@@ -19,7 +19,7 @@ export const SessionRating: React.FC<SessionRatingProps> = ({
 }) => {
   const [hasRated, setHasRated] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentRatingType, setCurrentRatingType] = useState<'thumbs_up' | 'thumbs_down' | null>(null);
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
@@ -41,38 +41,9 @@ export const SessionRating: React.FC<SessionRatingProps> = ({
       return;
     }
 
-    if (ratingType === 'thumbs_down') {
-      setIsFeedbackModalOpen(true);
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('agent_ratings')
-        .insert({
-          agent_id: agentId,
-          session_id: sessionId,
-          rating_type: ratingType
-        });
-
-      if (error) throw error;
-
-      setHasRated(true);
-      toast({
-        title: "Rating submitted",
-        description: "Thank you for your feedback! This helps us improve the agent experience.",
-      });
-    } catch (error) {
-      console.error('Error submitting rating:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit rating. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Both thumbs up and thumbs down now open the feedback modal
+    setCurrentRatingType(ratingType);
+    setIsFeedbackModalOpen(true);
   };
 
   const handleFeedbackModalClose = () => {
@@ -93,7 +64,7 @@ export const SessionRating: React.FC<SessionRatingProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => handleRating('thumbs_up')}
-            disabled={hasRated || isSubmitting}
+            disabled={hasRated}
             className={`hover:bg-green-100 hover:text-green-700 ${
               hasRated ? 'opacity-50 cursor-not-allowed' : ''
             }`}
@@ -104,7 +75,7 @@ export const SessionRating: React.FC<SessionRatingProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => handleRating('thumbs_down')}
-            disabled={hasRated || isSubmitting}
+            disabled={hasRated}
             className={`hover:bg-red-100 hover:text-red-700 ${
               hasRated ? 'opacity-50 cursor-not-allowed' : ''
             }`}
@@ -119,6 +90,7 @@ export const SessionRating: React.FC<SessionRatingProps> = ({
         onClose={handleFeedbackModalClose}
         agentId={agentId}
         sessionId={sessionId}
+        ratingType={currentRatingType}
       />
     </>
   );
