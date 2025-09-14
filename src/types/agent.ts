@@ -11,6 +11,10 @@ export interface Agent {
   voice: string;
   model: string;
   status_type: 'deployed' | 'testing' | 'building' | 'repairing';
+  rating?: number;
+  total_thumbs_up?: number;
+  total_thumbs_down?: number;
+  total_ratings?: number;
   createdAt: number;
   updatedAt: number;
 }

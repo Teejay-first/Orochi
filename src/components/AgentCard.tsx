@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { RatingDisplay } from '@/components/RatingDisplay';
 
 interface AgentCardProps {
   agent: Agent;
@@ -47,33 +48,39 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               </p>
             </div>
             
-            <div className="flex items-center gap-1 flex-wrap h-12 overflow-hidden">
-              <Badge 
-                className={`text-xs font-medium ${
-                  agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
-                  agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
-                  agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
-                  'bg-status-repairing text-status-repairing-foreground'
-                }`}
-              >
-                {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {agent.language[0]}
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                {agent.category}
-              </Badge>
-              {agent.language.length > 1 && (
-                <div className="flex gap-1 flex-wrap">
-                  {agent.language.slice(1).map((lang, index) => (
-                    <Badge key={index} variant="outline" className="text-xs opacity-70">
-                      {lang}
-                    </Badge>
-                  ))}
-                </div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1 flex-wrap">
+                <Badge 
+                  className={`text-xs font-medium ${
+                    agent.status_type === 'deployed' ? 'bg-status-deployed text-status-deployed-foreground' :
+                    agent.status_type === 'testing' ? 'bg-status-testing text-status-testing-foreground' :
+                    agent.status_type === 'building' ? 'bg-status-building text-status-building-foreground' :
+                    'bg-status-repairing text-status-repairing-foreground'
+                  }`}
+                >
+                  {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {agent.language[0]}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {agent.category}
+                </Badge>
+              </div>
+              {agent.rating !== undefined && agent.rating > 0 && (
+                <RatingDisplay rating={agent.rating} />
               )}
             </div>
+            
+            {agent.language.length > 1 && (
+              <div className="flex gap-1 flex-wrap">
+                {agent.language.slice(1).map((lang, index) => (
+                  <Badge key={index} variant="outline" className="text-xs opacity-70">
+                    {lang}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         

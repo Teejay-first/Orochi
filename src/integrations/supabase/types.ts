@@ -146,6 +146,51 @@ export type Database = {
           },
         ]
       }
+      agent_ratings: {
+        Row: {
+          accuracy: number | null
+          agent_id: string
+          created_at: string
+          feedback_tags: string[] | null
+          feedback_text: string | null
+          id: string
+          rating_type: string
+          response_speed: number | null
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+          voice_naturality: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          agent_id: string
+          created_at?: string
+          feedback_tags?: string[] | null
+          feedback_text?: string | null
+          id?: string
+          rating_type: string
+          response_speed?: number | null
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+          voice_naturality?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          agent_id?: string
+          created_at?: string
+          feedback_tags?: string[] | null
+          feedback_text?: string | null
+          id?: string
+          rating_type?: string
+          response_speed?: number | null
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+          voice_naturality?: number | null
+        }
+        Relationships: []
+      }
       agent_submissions: {
         Row: {
           agent_id: string
@@ -242,6 +287,7 @@ export type Database = {
           prompt_text: string | null
           provider: string | null
           provider_config: Json | null
+          rating: number | null
           settings: Json | null
           short_desc: string | null
           slug: string | null
@@ -249,6 +295,9 @@ export type Database = {
           status_type: string | null
           tagline: string
           tags: string[] | null
+          total_ratings: number | null
+          total_thumbs_down: number | null
+          total_thumbs_up: number | null
           updated_at: string
           visibility: string | null
           voice: string
@@ -269,6 +318,7 @@ export type Database = {
           prompt_text?: string | null
           provider?: string | null
           provider_config?: Json | null
+          rating?: number | null
           settings?: Json | null
           short_desc?: string | null
           slug?: string | null
@@ -276,6 +326,9 @@ export type Database = {
           status_type?: string | null
           tagline: string
           tags?: string[] | null
+          total_ratings?: number | null
+          total_thumbs_down?: number | null
+          total_thumbs_up?: number | null
           updated_at?: string
           visibility?: string | null
           voice: string
@@ -296,6 +349,7 @@ export type Database = {
           prompt_text?: string | null
           provider?: string | null
           provider_config?: Json | null
+          rating?: number | null
           settings?: Json | null
           short_desc?: string | null
           slug?: string | null
@@ -303,6 +357,9 @@ export type Database = {
           status_type?: string | null
           tagline?: string
           tags?: string[] | null
+          total_ratings?: number | null
+          total_thumbs_down?: number | null
+          total_thumbs_up?: number | null
           updated_at?: string
           visibility?: string | null
           voice?: string
