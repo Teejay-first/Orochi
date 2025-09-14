@@ -36,7 +36,7 @@ export const Admin: React.FC = () => {
     voice: 'alloy',
     model: 'gpt-realtime-2025-08-28',
     status_type: 'deployed' as Agent['status_type'],
-    agent_price: 'budget' as Agent['agent_price'],
+    agent_price: 1 as Agent['agent_price'],
   });
 
   const resetForm = () => {
@@ -52,7 +52,7 @@ export const Admin: React.FC = () => {
       voice: 'alloy',
       model: 'gpt-realtime-2025-08-28',
       status_type: 'deployed',
-      agent_price: 'budget',
+      agent_price: 1,
     });
     setEditingAgent(null);
   };
@@ -71,7 +71,7 @@ export const Admin: React.FC = () => {
       voice: agent.voice,
       model: agent.model,
       status_type: agent.status_type,
-      agent_price: agent.agent_price || 'budget',
+      agent_price: agent.agent_price || 1,
     });
     setIsModalOpen(true);
   };
@@ -208,7 +208,7 @@ export const Admin: React.FC = () => {
     await updateAgent(agentId, { agent_price: newPrice });
     toast({
       title: "Price Updated",
-      description: `Agent price changed to ${PRICE_TYPES.find(p => p.value === newPrice)?.label}`,
+      description: `Agent price changed to ${PRICE_TYPES.find(p => p.value === newPrice)?.symbol}`,
     });
   };
 
@@ -373,13 +373,13 @@ export const Admin: React.FC = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Price Tier</Label>
-                    <Select value={formData.agent_price || 'budget'} onValueChange={(value: Agent['agent_price']) => setFormData(prev => ({ ...prev, agent_price: value }))}>
+                    <Select value={formData.agent_price?.toString() || '1'} onValueChange={(value) => setFormData(prev => ({ ...prev, agent_price: parseInt(value) }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {PRICE_TYPES.map((price) => (
-                          <SelectItem key={price.value} value={price.value}>{price.label} ({price.symbol})</SelectItem>
+                          <SelectItem key={price.value} value={price.value.toString()}>{price.symbol}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -516,21 +516,21 @@ export const Admin: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Select 
-                            value={agent.agent_price || 'budget'} 
-                            onValueChange={(value: Agent['agent_price']) => handlePriceChange(agent.id, value)}
+                            value={agent.agent_price?.toString() || '1'} 
+                            onValueChange={(value) => handlePriceChange(agent.id, parseInt(value))}
                           >
                             <SelectTrigger className="w-24 h-8 text-xs">
                               <SelectValue>
                                 <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
-                                  {PRICE_TYPES.find(p => p.value === agent.agent_price || 'budget')?.symbol}
+                                  {PRICE_TYPES.find(p => p.value === agent.agent_price)?.symbol || '$'}
                                 </Badge>
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {PRICE_TYPES.map((price) => (
-                                <SelectItem key={price.value} value={price.value}>
+                                <SelectItem key={price.value} value={price.value.toString()}>
                                   <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
-                                    {price.symbol} {price.label}
+                                    {price.symbol}
                                   </Badge>
                                 </SelectItem>
                               ))}

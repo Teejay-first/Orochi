@@ -273,7 +273,7 @@ export type Database = {
       agents: {
         Row: {
           access_mode: string | null
-          agent_price: string | null
+          agent_price: number | null
           avatar_url: string
           average_rating: number | null
           category: string
@@ -306,7 +306,7 @@ export type Database = {
         }
         Insert: {
           access_mode?: string | null
-          agent_price?: string | null
+          agent_price?: number | null
           avatar_url: string
           average_rating?: number | null
           category: string
@@ -339,7 +339,7 @@ export type Database = {
         }
         Update: {
           access_mode?: string | null
-          agent_price?: string | null
+          agent_price?: number | null
           avatar_url?: string
           average_rating?: number | null
           category?: string
