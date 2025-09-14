@@ -7,10 +7,12 @@ import { FilterPanel } from '@/components/FilterPanel';
 import { UserDisplay } from '@/components/UserDisplay';
 import { Button } from '@/components/ui/button';
 import { Settings, Waves } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { agents, loading } = useAgents();
+  const { isAdmin, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -51,14 +53,17 @@ export const Home: React.FC = () => {
             
             <div className="flex items-center gap-2">
               <UserDisplay />
-              <Button
-                variant="outline"
-                onClick={() => navigate('/admin')}
-                className="hover:bg-secondary-hover transition-smooth"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
+              {isAdmin && !authLoading && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/admin')}
+                  className="hover:bg-secondary-hover transition-smooth"
+                  data-testid="btn-admin"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Admin
+                </Button>
+              )}
             </div>
           </div>
         </div>

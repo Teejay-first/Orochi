@@ -3,26 +3,69 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+interface UserProfile {
+  is_admin: boolean;
+  is_super_admin: boolean;
+  full_name?: string;
+  email?: string;
+}
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin, is_super_admin, full_name, email')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch profile data when user signs in
+          const profileData = await fetchProfile(session.user.id);
+          setProfile(profileData);
+        } else {
+          setProfile(null);
+        }
+        
         setLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const profileData = await fetchProfile(session.user.id);
+        setProfile(profileData);
+      }
+      
       setLoading(false);
     });
 
@@ -130,10 +173,16 @@ export const useAuth = () => {
     }
   };
 
+  const isAdmin = profile?.is_admin || profile?.is_super_admin || false;
+  const isSuper = profile?.is_super_admin || false;
+
   return {
     user,
     session,
     loading,
+    profile,
+    isAdmin,
+    isSuper,
     signInWithGoogle,
     signInWithInviteCode,
     signOut,
