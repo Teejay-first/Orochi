@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Agent, CATEGORIES, LANGUAGES, VOICES, STATUS_TYPES } from '@/types/agent';
+import { Agent, CATEGORIES, LANGUAGES, VOICES, STATUS_TYPES, PRICE_TYPES } from '@/types/agent';
 import { useAgents } from '@/contexts/AgentContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,7 @@ export const Admin: React.FC = () => {
     voice: 'alloy',
     model: 'gpt-realtime-2025-08-28',
     status_type: 'deployed' as Agent['status_type'],
+    agent_price: 'budget' as Agent['agent_price'],
   });
 
   const resetForm = () => {
@@ -51,6 +52,7 @@ export const Admin: React.FC = () => {
       voice: 'alloy',
       model: 'gpt-realtime-2025-08-28',
       status_type: 'deployed',
+      agent_price: 'budget',
     });
     setEditingAgent(null);
   };
@@ -69,6 +71,7 @@ export const Admin: React.FC = () => {
       voice: agent.voice,
       model: agent.model,
       status_type: agent.status_type,
+      agent_price: agent.agent_price || 'budget',
     });
     setIsModalOpen(true);
   };
@@ -198,6 +201,14 @@ export const Admin: React.FC = () => {
     toast({
       title: "Status Updated",
       description: `Agent status changed to ${STATUS_TYPES.find(s => s.value === newStatus)?.label}`,
+    });
+  };
+
+  const handlePriceChange = async (agentId: string, newPrice: Agent['agent_price']) => {
+    await updateAgent(agentId, { agent_price: newPrice });
+    toast({
+      title: "Price Updated",
+      description: `Agent price changed to ${PRICE_TYPES.find(p => p.value === newPrice)?.label}`,
     });
   };
 
@@ -346,19 +357,34 @@ export const Admin: React.FC = () => {
                   </div>
                   </div>
                   
-                 <div>
-                   <Label className="text-sm font-medium mb-2 block">Status</Label>
-                   <Select value={formData.status_type} onValueChange={(value: Agent['status_type']) => setFormData(prev => ({ ...prev, status_type: value }))}>
-                     <SelectTrigger>
-                       <SelectValue />
-                     </SelectTrigger>
-                     <SelectContent>
-                       {STATUS_TYPES.map((status) => (
-                         <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
-                 </div>
+                  <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Status</Label>
+                    <Select value={formData.status_type} onValueChange={(value: Agent['status_type']) => setFormData(prev => ({ ...prev, status_type: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_TYPES.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Price Tier</Label>
+                    <Select value={formData.agent_price || 'budget'} onValueChange={(value: Agent['agent_price']) => setFormData(prev => ({ ...prev, agent_price: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRICE_TYPES.map((price) => (
+                          <SelectItem key={price.value} value={price.value}>{price.label} ({price.symbol})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  </div>
                    
                  <div>
                    <Label className="text-sm font-medium mb-2 block">Prompt Source</Label>
@@ -437,6 +463,7 @@ export const Admin: React.FC = () => {
                       <TableHead>Category</TableHead>
                       <TableHead>Language</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Price</TableHead>
                       <TableHead>Prompt Source</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -481,6 +508,29 @@ export const Admin: React.FC = () => {
                                     className={`text-xs font-medium bg-${status.color} text-${status.color}-foreground`}
                                   >
                                     {status.label}
+                                  </Badge>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={agent.agent_price || 'budget'} 
+                            onValueChange={(value: Agent['agent_price']) => handlePriceChange(agent.id, value)}
+                          >
+                            <SelectTrigger className="w-24 h-8 text-xs">
+                              <SelectValue>
+                                <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
+                                  {PRICE_TYPES.find(p => p.value === agent.agent_price || 'budget')?.symbol}
+                                </Badge>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PRICE_TYPES.map((price) => (
+                                <SelectItem key={price.value} value={price.value}>
+                                  <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
+                                    {price.symbol} {price.label}
                                   </Badge>
                                 </SelectItem>
                               ))}

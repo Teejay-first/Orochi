@@ -40,11 +40,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-status-deployed rounded-full border-2 border-card" />
             </div>
             
-            {/* Rating section under avatar */}
-            <div className="mt-2 flex flex-col items-center gap-1">
-              {agent.average_rating !== undefined && (
-                <StarRating rating={agent.average_rating} count={agent.total_ratings} />
-              )}
+            {/* Thumbs up score moved under avatar */}
+            <div className="mt-2">
               {agent.rating !== undefined && agent.rating > 0 && (
                 <PopularityScore score={agent.rating} />
               )}
@@ -72,12 +69,23 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
               >
                 {STATUS_TYPES.find(s => s.value === agent.status_type)?.label || agent.status_type}
               </Badge>
+              {agent.agent_price && (
+                <Badge className="text-xs font-medium bg-price-green text-price-green-foreground">
+                  {agent.agent_price === 'budget' ? '$' : agent.agent_price === 'standard' ? '$$' : '$$$'}
+                </Badge>
+              )}
               <Badge variant="outline" className="text-xs">
                 {agent.language[0]}
               </Badge>
               <Badge variant="secondary" className="text-xs">
                 {agent.category}
               </Badge>
+              {/* Star rating moved to align with badges */}
+              {agent.average_rating !== undefined && (
+                <div className="ml-1">
+                  <StarRating rating={agent.average_rating} count={agent.total_ratings} />
+                </div>
+              )}
             </div>
             
             {agent.language.length > 1 && (
