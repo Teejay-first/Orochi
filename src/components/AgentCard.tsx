@@ -42,7 +42,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             
             {/* Rating section under avatar */}
             <div className="mt-2 flex flex-col items-center gap-1">
-              {agent.average_rating !== undefined && agent.average_rating > 0 && (
+              {agent.average_rating !== undefined && (
                 <StarRating rating={agent.average_rating} count={agent.total_ratings} />
               )}
               {agent.rating !== undefined && agent.rating > 0 && (

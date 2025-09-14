@@ -14,11 +14,12 @@ export const StarRating: React.FC<StarRatingProps> = ({
   showCount = false, 
   className = "" 
 }) => {
-  if (rating <= 0) return null;
+  // Always show stars, even for 0 rating
+  const displayRating = Math.max(0, Math.min(5, rating));
 
   // Google-style star logic: half star if remainder ≥0.25 and <0.75
-  const fullStars = Math.floor(rating);
-  const remainder = rating % 1;
+  const fullStars = Math.floor(displayRating);
+  const remainder = displayRating % 1;
   const hasHalfStar = remainder >= 0.25 && remainder < 0.75;
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
@@ -30,8 +31,8 @@ export const StarRating: React.FC<StarRatingProps> = ({
   };
 
   const ariaLabel = count 
-    ? `Rated ${rating.toFixed(1)} out of 5 from ${count} ratings`
-    : `Rated ${rating.toFixed(1)} out of 5`;
+    ? `Rated ${displayRating.toFixed(1)} out of 5 from ${count} ratings`
+    : `Rated ${displayRating.toFixed(1)} out of 5`;
 
   return (
     <div className={`flex items-center gap-1 ${className}`} aria-label={ariaLabel} title={ariaLabel}>
@@ -58,7 +59,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
       </div>
       
       <span className="text-xs font-medium text-foreground">
-        {rating.toFixed(1)}
+        {displayRating.toFixed(1)}
       </span>
       
       {showCount && count && count > 0 && (
