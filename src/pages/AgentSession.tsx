@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX, Settings } from 'lucide-react';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 type SessionStatus = 'idle' | 'connecting' | 'connected' | 'ended';
+type InputMode = 'hands-free' | 'push-to-talk';
 
 export const AgentSession: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +34,8 @@ export const AgentSession: React.FC = () => {
   const [selectedVoice, setSelectedVoice] = useState('alloy');
   const [latencyTarget, setLatencyTarget] = useState([200]);
   const [maxDuration, setMaxDuration] = useState([300]);
+  const [inputMode, setInputMode] = useState<InputMode>('hands-free');
+  const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
   
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const conversationIdRef = useRef<string | null>(null);
@@ -157,6 +160,12 @@ export const AgentSession: React.FC = () => {
         promptId: agent.prompt_id, 
         model: agent.model || 'gpt-realtime-2025-08-28' 
       });
+
+      // Set initial mic state based on mode
+      if (inputMode === 'push-to-talk') {
+        realtimeChatRef.current.setMicMute(true);
+        setIsMuted(true);
+      }
       
       toast({
         title: "Connected",
@@ -203,6 +212,56 @@ export const AgentSession: React.FC = () => {
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleMicToggle = () => {
+    if (!realtimeChatRef.current) return;
+    
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    realtimeChatRef.current.setMicMute(newMutedState);
+  };
+
+  const handleSpeakerToggle = () => {
+    if (!realtimeChatRef.current) return;
+    
+    const newDeafenedState = !isDeafened;
+    setIsDeafened(newDeafenedState);
+    realtimeChatRef.current.setSpeakerMute(newDeafenedState);
+  };
+
+  const handlePushToTalkStart = () => {
+    if (!realtimeChatRef.current || inputMode !== 'push-to-talk') return;
+    
+    setIsPushToTalkActive(true);
+    setIsMuted(false);
+    realtimeChatRef.current.setMicMute(false);
+  };
+
+  const handlePushToTalkEnd = () => {
+    if (!realtimeChatRef.current || inputMode !== 'push-to-talk') return;
+    
+    setIsPushToTalkActive(false);
+    setIsMuted(true);
+    realtimeChatRef.current.setMicMute(true);
+  };
+
+  const handleModeToggle = () => {
+    const newMode = inputMode === 'hands-free' ? 'push-to-talk' : 'hands-free';
+    setInputMode(newMode);
+    
+    if (realtimeChatRef.current && sessionStatus === 'connected') {
+      if (newMode === 'push-to-talk') {
+        // Mute mic in push-to-talk mode
+        setIsMuted(true);
+        realtimeChatRef.current.setMicMute(true);
+        setIsPushToTalkActive(false);
+      } else {
+        // Unmute mic in hands-free mode
+        setIsMuted(false);
+        realtimeChatRef.current.setMicMute(false);
+      }
     }
   };
 
@@ -292,19 +351,42 @@ export const AgentSession: React.FC = () => {
                 
                 {sessionStatus === 'connected' && (
                   <div className="flex items-center gap-4">
+                    {/* Mode Toggle */}
                     <Button
-                      variant={isMuted ? "destructive" : "outline"}
-                      onClick={() => setIsMuted(!isMuted)}
+                      variant="outline"
+                      onClick={handleModeToggle}
+                      className="gap-2"
                     >
-                      {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      <Settings className="w-4 h-4" />
+                      {inputMode === 'hands-free' ? 'Hands-Free' : 'Push-to-Talk'}
                     </Button>
-                    
-                    <Button
-                      variant={isDeafened ? "destructive" : "outline"}
-                      onClick={() => setIsDeafened(!isDeafened)}
-                    >
-                      {isDeafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                    </Button>
+
+                    {inputMode === 'hands-free' && (
+                      <>
+                        <Button
+                          variant={isMuted ? "destructive" : "outline"}
+                          onClick={handleMicToggle}
+                        >
+                          {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                        </Button>
+                        
+                        <Button
+                          variant={isDeafened ? "destructive" : "outline"}
+                          onClick={handleSpeakerToggle}
+                        >
+                          {isDeafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        </Button>
+                      </>
+                    )}
+
+                    {inputMode === 'push-to-talk' && (
+                      <Button
+                        variant={isDeafened ? "destructive" : "outline"}
+                        onClick={handleSpeakerToggle}
+                      >
+                        {isDeafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </Button>
+                    )}
                     
                     <Button onClick={handleEndSession} variant="destructive">
                       <PhoneOff className="w-5 h-5 mr-2" />
@@ -376,6 +458,42 @@ export const AgentSession: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Push-to-Talk Button for Mobile */}
+      {inputMode === 'push-to-talk' && sessionStatus === 'connected' && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
+          <Button
+            size="lg"
+            variant={isPushToTalkActive ? "default" : "outline"}
+            className={`w-20 h-20 rounded-full ${
+              isPushToTalkActive ? 'bg-primary scale-110' : 'bg-background/90 backdrop-blur-sm'
+            } transition-all duration-200 shadow-lg`}
+            onMouseDown={handlePushToTalkStart}
+            onMouseUp={handlePushToTalkEnd}
+            onTouchStart={handlePushToTalkStart}
+            onTouchEnd={handlePushToTalkEnd}
+          >
+            {isMuted ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
+          </Button>
+        </div>
+      )}
+
+      {/* Desktop Push-to-Talk Button */}
+      {inputMode === 'push-to-talk' && sessionStatus === 'connected' && (
+        <div className="fixed bottom-8 right-8 z-50 hidden md:block">
+          <Button
+            size="lg"
+            variant={isPushToTalkActive ? "default" : "outline"}
+            className={`w-16 h-16 rounded-full ${
+              isPushToTalkActive ? 'bg-primary scale-110' : 'bg-background/90 backdrop-blur-sm'
+            } transition-all duration-200 shadow-lg`}
+            onMouseDown={handlePushToTalkStart}
+            onMouseUp={handlePushToTalkEnd}
+          >
+            {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+          </Button>
+        </div>
+      )}
 
       {/* Sidebar */}
       <div className="w-80 border-l border-border/40 bg-card/30 p-4 space-y-6">

@@ -30,6 +30,8 @@ export class RealtimeChat {
   private assistantTextBuffer: string = '';
   private turnIndex: number = 0;
   private sessionStartTime: number | null = null;
+  private isMicMuted: boolean = false;
+  private isSpeakerMuted: boolean = false;
 
   constructor(
     private onMessage: (message: RealtimeMessage) => void,
@@ -390,6 +392,33 @@ export class RealtimeChat {
     } catch (error) {
       console.error('Failed to update conversation stats:', error);
     }
+  }
+
+  setMicMute(muted: boolean) {
+    this.isMicMuted = muted;
+    if (this.localStream) {
+      const audioTrack = this.localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !muted;
+        console.log('Microphone', muted ? 'muted' : 'unmuted');
+      }
+    }
+  }
+
+  setSpeakerMute(muted: boolean) {
+    this.isSpeakerMuted = muted;
+    if (this.audioEl) {
+      this.audioEl.muted = muted;
+      console.log('Speaker', muted ? 'muted' : 'unmuted');
+    }
+  }
+
+  getMicMuteState(): boolean {
+    return this.isMicMuted;
+  }
+
+  getSpeakerMuteState(): boolean {
+    return this.isSpeakerMuted;
   }
 
   async disconnect() {
