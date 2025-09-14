@@ -47,6 +47,10 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 220 9% 95%;
     
+    /* Price colors */
+    --price-green: 142 76% 45%;
+    --price-green-foreground: 220 9% 95%;
+    
     /* Agent status colors */
     --status-deployed: 142 76% 36%;
     --status-deployed-foreground: 220 9% 95%;

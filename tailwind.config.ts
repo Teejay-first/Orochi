@@ -76,6 +76,10 @@ export default {
           DEFAULT: "hsl(var(--status-repairing))",
           foreground: "hsl(var(--status-repairing-foreground))",
         },
+        "price-green": {
+          DEFAULT: "hsl(var(--price-green))",
+          foreground: "hsl(var(--price-green-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
