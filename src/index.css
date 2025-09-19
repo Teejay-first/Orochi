@@ -19,11 +19,11 @@
     --popover: 220 13% 9%;
     --popover-foreground: 220 9% 95%;
 
-    /* Primary purple system */
-    --primary: 270 65% 60%;
-    --primary-foreground: 220 9% 95%;
-    --primary-glow: 270 65% 70%;
-    --primary-dark: 270 65% 45%;
+    /* Primary purple system - enhanced contrast */
+    --primary: 270 70% 65%;
+    --primary-foreground: 220 9% 98%;
+    --primary-glow: 270 70% 75%;
+    --primary-dark: 270 70% 45%;
 
     /* Secondary system */
     --secondary: 220 13% 15%;
@@ -34,10 +34,10 @@
     --muted: 220 13% 12%;
     --muted-foreground: 220 9% 60%;
 
-    /* Accent cyan system */
-    --accent: 190 80% 55%;
+    /* Accent cyan system - enhanced visibility */
+    --accent: 190 85% 60%;
     --accent-foreground: 220 13% 8%;
-    --accent-glow: 190 80% 65%;
+    --accent-glow: 190 85% 70%;
 
     /* Status colors */
     --success: 142 76% 36%;

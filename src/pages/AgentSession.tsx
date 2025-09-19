@@ -257,241 +257,178 @@ export const AgentSession: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Main Session Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm p-4">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/')}
-              className="hover:bg-secondary-hover"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            
-            <div className="flex items-center gap-3">
-              <img
-                src={agent.avatarUrl}
-                alt={agent.name}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-border"
-              />
-              <div>
-                <h2 className="font-semibold">{agent.name}</h2>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {agent.category}
-                  </Badge>
-                  <div className={`voice-indicator ${sessionStatus === 'connected' ? 'active' : ''}`} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Call Panel */}
-        <div className="flex-1 flex flex-col p-6">
-          {/* Status and Controls */}
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center gap-4 mb-6">
-                {sessionStatus === 'idle' && (
-                  <Button onClick={handleStartSession} size="lg" className="px-8">
-                    <Phone className="w-5 h-5 mr-2" />
-                    Start Session
-                  </Button>
-                )}
-                
-                {sessionStatus === 'connecting' && (
-                  <Button disabled size="lg" className="px-8">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current mr-2" />
-                    Connecting...
-                  </Button>
-                )}
-                
-                {sessionStatus === 'connected' && (
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant={isMuted ? "destructive" : "outline"}
-                      onClick={handleMicToggle}
-                    >
-                      {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </Button>
-                    
-                    <Button
-                      variant={isDeafened ? "destructive" : "outline"}
-                      onClick={handleSpeakerToggle}
-                    >
-                      {isDeafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                    </Button>
-                    
-                    <Button onClick={handleEndSession} variant="destructive">
-                      <PhoneOff className="w-5 h-5 mr-2" />
-                      End Session
-                    </Button>
-                  </div>
-                )}
-                
-                {sessionStatus === 'ended' && (
-                  <div className="flex flex-col items-center gap-4">
-                    <Button onClick={() => navigate('/')} variant="outline">
-                      Return Home
-                    </Button>
-                    <SessionRating 
-                      agentId={agent.id} 
-                      sessionId={conversationIdRef.current || undefined}
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div className="text-center text-sm text-muted-foreground">
-                Status: <span className="capitalize font-medium">{sessionStatus}</span>
-              </div>
-              
-              {/* Rating Section - Show during connected sessions */}
-              {sessionStatus === 'connected' && (
-                <div className="mt-4 pt-4 border-t border-border/40">
-                  <SessionRating 
-                    agentId={agent.id} 
-                    sessionId={conversationIdRef.current || undefined}
-                    className="justify-center"
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Chat Timeline */}
-          <Card className="flex-1 mb-4">
-            <CardHeader>
-              <CardTitle className="text-lg">Conversation</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-auto max-h-96">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
-                        message.type === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : message.type === 'system'
-                          ? 'bg-muted text-muted-foreground'
-                          : 'bg-secondary text-secondary-foreground'
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Text Input */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendText()}
-              disabled={sessionStatus !== 'connected'}
-            />
-            <Button 
-              onClick={handleSendText}
-              disabled={!textInput.trim() || sessionStatus !== 'connected'}
-            >
-              Send
-            </Button>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-border/20">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => navigate('/')}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        
+        <div className="absolute left-1/2 transform -translate-x-1/2">
+          <div className="text-center">
+            <h1 className="text-2xl font-medium text-foreground">
+              You're now speaking with{' '}
+              <span className="text-primary font-semibold">{agent.name}</span>
+            </h1>
+            <p className="text-muted-foreground text-sm mt-2">
+              {agent.tagline}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Push-to-talk functionality removed - using hands-free mode only */}
+      {/* Main Voice Interface */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8">
+        {/* Status Message */}
+        <div className="text-center mb-12">
+          <p className="text-muted-foreground text-lg">
+            {sessionStatus === 'idle' && 'Ready to start your voice session'}
+            {sessionStatus === 'connecting' && 'Connecting to voice agent...'}
+            {sessionStatus === 'connected' && `${agent.name} is listening and ready to help you`}
+            {sessionStatus === 'ended' && 'Voice session has ended'}
+          </p>
+        </div>
 
-      {/* Sidebar */}
-      <div className="w-80 border-l border-border/40 bg-card/30 p-4 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Session Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Model</label>
-              <Input value={agent.model || 'gpt-realtime-2025-08-28'} disabled />
+        {/* Central Microphone */}
+        <div className="relative mb-16">
+          {sessionStatus === 'idle' && (
+            <Button 
+              onClick={handleStartSession} 
+              size="lg" 
+              className="w-24 h-24 rounded-full bg-primary hover:bg-primary-glow shadow-glow transition-all duration-300 hover:scale-105"
+            >
+              <Mic className="w-8 h-8" />
+            </Button>
+          )}
+          
+          {sessionStatus === 'connecting' && (
+            <div className="w-24 h-24 rounded-full bg-primary/20 border-4 border-primary flex items-center justify-center animate-pulse">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">Voice</label>
-              <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {VOICES.map((voice) => (
-                    <SelectItem key={voice} value={voice}>
-                      {voice}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Latency Target: {latencyTarget[0]}ms
-              </label>
-              <Slider
-                value={latencyTarget}
-                onValueChange={setLatencyTarget}
-                max={1000}
-                min={50}
-                step={50}
+          )}
+          
+          {sessionStatus === 'connected' && (
+            <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
+              isMuted 
+                ? 'bg-destructive/20 border-destructive shadow-lg' 
+                : 'bg-primary/20 border-primary shadow-accent animate-pulse-slow'
+            }`}>
+              <Mic 
+                className={`w-12 h-12 transition-colors duration-300 ${
+                  isMuted ? 'text-destructive' : 'text-primary'
+                }`} 
               />
             </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Max Duration: {Math.floor(maxDuration[0] / 60)}m {maxDuration[0] % 60}s
-              </label>
-              <Slider
-                value={maxDuration}
-                onValueChange={setMaxDuration}
-                max={1800}
-                min={30}
-                step={30}
-              />
+          )}
+          
+          {sessionStatus === 'ended' && (
+            <div className="w-24 h-24 rounded-full bg-muted border-4 border-border flex items-center justify-center">
+              <MicOff className="w-8 h-8 text-muted-foreground" />
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+
+        {/* Status Indicator */}
+        <div className="text-center mb-8">
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+            sessionStatus === 'connected' 
+              ? 'bg-success/20 text-success border border-success/30' 
+              : sessionStatus === 'connecting'
+              ? 'bg-warning/20 text-warning border border-warning/30'
+              : 'bg-muted text-muted-foreground border border-border'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              sessionStatus === 'connected' 
+                ? 'bg-success animate-pulse' 
+                : sessionStatus === 'connecting'
+                ? 'bg-warning animate-pulse'
+                : 'bg-muted-foreground'
+            }`} />
+            <span className="text-sm font-medium capitalize">{sessionStatus}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="border-t border-border/20 p-6">
+        <div className="flex items-center justify-center gap-6">
+          {sessionStatus === 'connected' && (
+            <>
+              <Button
+                variant={isMuted ? "destructive" : "outline"}
+                size="lg"
+                onClick={handleMicToggle}
+                className="flex flex-col items-center gap-2 h-auto py-3 px-6"
+              >
+                {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                <span className="text-xs">Microphone</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                disabled
+                className="flex flex-col items-center gap-2 h-auto py-3 px-6 opacity-50"
+              >
+                <div className="w-5 h-5 border-2 border-current rounded" />
+                <span className="text-xs">Camera</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                disabled
+                className="flex flex-col items-center gap-2 h-auto py-3 px-6 opacity-50"
+              >
+                <div className="w-5 h-5 border-2 border-current rounded flex items-center justify-center">
+                  <div className="w-2 h-2 border border-current" />
+                </div>
+                <span className="text-xs">Share screen</span>
+              </Button>
+              
+              <Button
+                variant={isDeafened ? "destructive" : "outline"}
+                size="lg"
+                onClick={handleSpeakerToggle}
+                className="flex flex-col items-center gap-2 h-auto py-3 px-6"
+              >
+                {isDeafened ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                <span className="text-xs">Leave</span>
+              </Button>
+            </>
+          )}
+        </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Agent Info</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-2">{agent.tagline}</p>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Language:</span>
-                <span>{agent.language}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Prompt Source:</span>
-                <span className="capitalize">{agent.prompt_source}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {sessionStatus === 'connected' && (
+          <div className="flex justify-center mt-6">
+            <Button 
+              onClick={handleEndSession} 
+              variant="destructive" 
+              size="lg"
+              className="px-8"
+            >
+              End Session
+            </Button>
+          </div>
+        )}
+        
+        {sessionStatus === 'ended' && (
+          <div className="flex flex-col items-center gap-4">
+            <Button onClick={() => navigate('/')} size="lg" className="px-8">
+              Return Home
+            </Button>
+            <SessionRating 
+              agentId={agent.id} 
+              sessionId={conversationIdRef.current || undefined}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
