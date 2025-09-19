@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { AccessToken, type VideoGrant } from "https://esm.sh/livekit-server-sdk@2.1.0";
-import { RoomConfiguration, RoomAgentDispatch } from "https://esm.sh/@livekit/protocol@1.11.0";
+import { AccessToken, type VideoGrant } from "https://esm.sh/livekit-server-sdk@2.13.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,10 +48,10 @@ serve(async (req) => {
     at.addGrant(grant);
 
     // OPTIONAL: dispatch a server-side LiveKit Agent into the room on join
+    // Note: Agent dispatch functionality removed due to import issues
+    // Basic token generation without agent dispatch
     if (agentNameStr) {
-      at.roomConfig = new RoomConfiguration({
-        agents: [new RoomAgentDispatch({ agentName: agentNameStr })],
-      });
+      console.log('Agent name provided but agent dispatch not available:', agentNameStr);
     }
 
     const token = await at.toJwt(); // v2 API is async
