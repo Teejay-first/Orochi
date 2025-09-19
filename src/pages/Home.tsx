@@ -7,20 +7,22 @@ import { FilterPanel } from '@/components/FilterPanel';
 import { UserDisplay } from '@/components/UserDisplay';
 import { SortDropdown, SortOption, TimeFilter } from '@/components/SortDropdown';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Settings, Waves, Plus, MessageSquare, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { agents, loading } = useAgents();
-  const { isAdmin, userProfile } = useAuth();
+  const { isAdmin, userProfile, isAuthenticated, signInWithGoogle } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
-
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('average_rating_desc');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [showAccessDeniedDialog, setShowAccessDeniedDialog] = useState(false);
 
   const filteredAgents = useMemo(() => {
     return agents.filter(agent => {
@@ -70,6 +72,36 @@ export const Home: React.FC = () => {
     setTimeFilter('all');
   };
 
+  const handleCreateAgentClick = () => {
+    if (!isAuthenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    if (isAdmin || userProfile?.is_super_admin) {
+      navigate('/create-agent');
+    } else {
+      setShowAccessDeniedDialog(true);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      setShowAuthDialog(false);
+      // After successful login, check again if user has access
+      setTimeout(() => {
+        if (isAdmin || userProfile?.is_super_admin) {
+          navigate('/create-agent');
+        } else {
+          setShowAccessDeniedDialog(true);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to sign in:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -94,16 +126,14 @@ export const Home: React.FC = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Submit
               </Button>
-              {(isAdmin || userProfile?.is_super_admin) && (
-                <Button
-                  onClick={() => navigate('/create-agent')}
-                  variant="secondary"
-                  className="hover:bg-secondary-hover transition-smooth"
-                >
-                  <Waves className="w-4 h-4 mr-2" />
-                  Create Agent
-                </Button>
-              )}
+              <Button
+                onClick={() => handleCreateAgentClick()}
+                variant="secondary"
+                className="hover:bg-secondary-hover transition-smooth"
+              >
+                <Waves className="w-4 h-4 mr-2" />
+                Create Agent
+              </Button>
               <UserDisplay />
               {isAdmin && (
                 <Button
@@ -324,6 +354,55 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Authentication Dialog */}
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign in Required</DialogTitle>
+            <DialogDescription>
+              You need to sign in with Google to create voice agents.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <Button onClick={handleGoogleSignIn} className="w-full">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Sign in with Google
+            </Button>
+            <Button variant="outline" onClick={() => setShowAuthDialog(false)} className="w-full">
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Access Denied Dialog */}
+      <Dialog open={showAccessDeniedDialog} onOpenChange={setShowAccessDeniedDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Access Restricted</DialogTitle>
+            <DialogDescription>
+              Creating voice agents requires special permissions. Please contact support to request access.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <Button 
+              onClick={() => window.open('mailto:team@voiceagents.directory', '_blank')} 
+              className="w-full"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact Support
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAccessDeniedDialog(false)} 
+              className="w-full"
+            >
+              Return to Home
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
