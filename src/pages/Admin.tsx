@@ -30,7 +30,7 @@ export const Admin: React.FC = () => {
     tagline: '',
     category: 'Other',
     language: ['EN'],
-    prompt_source: 'text' as 'text' | 'prompt_id',
+    prompt_source: 'text' as 'text' | 'prompt_id' | 'aristocratic_master_agent',
     prompt_text: '',
     prompt_id: '',
     voice: 'alloy',

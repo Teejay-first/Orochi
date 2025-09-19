@@ -26,8 +26,9 @@ serve(async (req) => {
     // Get LiveKit credentials from environment
     const LIVEKIT_API_KEY = Deno.env.get('LIVEKIT_API_KEY');
     const LIVEKIT_API_SECRET = Deno.env.get('LIVEKIT_API_SECRET');
+    const LIVEKIT_URL = Deno.env.get('LIVEKIT_URL');
 
-    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
+    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_URL) {
       throw new Error('LiveKit credentials not configured');
     }
 
@@ -58,7 +59,10 @@ serve(async (req) => {
     
     console.log('LiveKit token created successfully');
 
-    return new Response(JSON.stringify({ token }), {
+    return new Response(JSON.stringify({ 
+      token, 
+      serverUrl: LIVEKIT_URL 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

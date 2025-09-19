@@ -14,6 +14,7 @@ export const CreateAgent: React.FC = () => {
   const { isAdmin, isSuperAdmin, loading } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
   const [lkToken, setLkToken] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [roomName, setRoomName] = useState<string | null>(null);
   const [showVoiceInterface, setShowVoiceInterface] = useState(false);
 
@@ -48,11 +49,12 @@ export const CreateAgent: React.FC = () => {
         throw new Error(error.message || 'Failed to get LiveKit token');
       }
 
-      if (!data?.token) {
-        throw new Error('No token received from LiveKit service');
+      if (!data?.token || !data?.serverUrl) {
+        throw new Error('No token or server URL received from LiveKit service');
       }
 
       setLkToken(data.token);
+      setServerUrl(data.serverUrl);
       setShowVoiceInterface(true);
     } catch (error: any) {
       console.error('Error starting voice session:', error);
@@ -69,6 +71,7 @@ export const CreateAgent: React.FC = () => {
   const handleEndSession = () => {
     setShowVoiceInterface(false);
     setLkToken(null);
+    setServerUrl(null);
     setRoomName(null);
   };
 
@@ -181,10 +184,10 @@ export const CreateAgent: React.FC = () => {
             </div>
 
             <div className="bg-card/50 rounded-2xl p-8 border border-border/40">
-              {lkToken && (
+              {lkToken && serverUrl && (
                 <LiveKitRoom
                   token={lkToken}
-                  serverUrl={process.env.VITE_LIVEKIT_URL || 'wss://placeholder.livekit.cloud'}
+                  serverUrl={serverUrl}
                   connect
                   audio
                   className="lk-room"

@@ -5,7 +5,7 @@ export interface Agent {
   tagline: string;
   category: string;
   language: string[];
-  prompt_source: 'text' | 'prompt_id';
+  prompt_source: 'text' | 'prompt_id' | 'aristocratic_master_agent';
   prompt_text?: string;
   prompt_id?: string;
   voice: string;
