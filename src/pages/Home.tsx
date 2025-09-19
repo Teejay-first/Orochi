@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { agents, loading } = useAgents();
-  const { isAdmin } = useAuth();
+  const { isAdmin, userProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -94,6 +94,16 @@ export const Home: React.FC = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Submit
               </Button>
+              {(isAdmin || userProfile?.is_super_admin) && (
+                <Button
+                  onClick={() => navigate('/create-agent')}
+                  variant="secondary"
+                  className="hover:bg-secondary-hover transition-smooth"
+                >
+                  <Waves className="w-4 h-4 mr-2" />
+                  Create Agent
+                </Button>
+              )}
               <UserDisplay />
               {isAdmin && (
                 <Button
