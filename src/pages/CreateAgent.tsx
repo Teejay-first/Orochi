@@ -28,10 +28,34 @@ export const CreateAgent: React.FC = () => {
       return;
     }
 
-    const hasAccess = isAdmin || isSuperAdmin || userProfile?.is_admin || userProfile?.is_super_admin;
-    
-    if (!hasAccess) {
-      setAccessDenied(true);
+    // Wait a bit longer for userProfile to load after authentication
+    const checkAccess = () => {
+      console.log('Checking access:', { 
+        isAdmin, 
+        isSuperAdmin, 
+        userProfile: userProfile ? {
+          is_admin: userProfile.is_admin,
+          is_super_admin: userProfile.is_super_admin,
+          email: userProfile.email
+        } : null 
+      });
+      
+      const hasAccess = isAdmin || isSuperAdmin || userProfile?.is_admin || userProfile?.is_super_admin;
+      
+      if (!hasAccess) {
+        // Only set access denied if we have tried to load the profile
+        // and it's been more than 2 seconds since authentication
+        setAccessDenied(true);
+      }
+    };
+
+    if (userProfile) {
+      // Profile is loaded, check access immediately
+      checkAccess();
+    } else {
+      // Profile not loaded yet, wait a bit then check
+      const timer = setTimeout(checkAccess, 2000);
+      return () => clearTimeout(timer);
     }
   }, [loading, isAuthenticated, isAdmin, isSuperAdmin, userProfile, navigate]);
 
@@ -80,12 +104,12 @@ export const CreateAgent: React.FC = () => {
     setRoomName(null);
   };
 
-  if (loading) {
+  if (loading || (!userProfile && isAuthenticated)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Loading user permissions...</p>
         </div>
       </div>
     );
