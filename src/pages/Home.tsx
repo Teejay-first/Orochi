@@ -21,7 +21,6 @@ export const Home: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('average_rating_desc');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showAccessDeniedDialog, setShowAccessDeniedDialog] = useState(false);
 
   const filteredAgents = useMemo(() => {
@@ -74,7 +73,8 @@ export const Home: React.FC = () => {
 
   const handleCreateAgentClick = () => {
     if (!isAuthenticated) {
-      setShowAuthDialog(true);
+      // Redirect to auth page with create-agent as the target
+      navigate('/auth?redirect=/create-agent');
       return;
     }
 
@@ -86,20 +86,7 @@ export const Home: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-      setShowAuthDialog(false);
-      // After successful login, check again if user has access
-      setTimeout(() => {
-        if (isAdmin || userProfile?.is_super_admin) {
-          navigate('/create-agent');
-        } else {
-          setShowAccessDeniedDialog(true);
-        }
-      }, 1000);
-    } catch (error) {
-      console.error('Failed to sign in:', error);
-    }
+    // This function is no longer needed since we redirect to /auth
   };
 
   return (
@@ -355,26 +342,7 @@ export const Home: React.FC = () => {
         </div>
       </footer>
 
-      {/* Authentication Dialog */}
-      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Sign in Required</DialogTitle>
-            <DialogDescription>
-              You need to sign in with Google to create voice agents.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <Button onClick={handleGoogleSignIn} className="w-full">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Sign in with Google
-            </Button>
-            <Button variant="outline" onClick={() => setShowAuthDialog(false)} className="w-full">
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Authentication Dialog - Removed since we redirect to /auth */}
 
       {/* Access Denied Dialog */}
       <Dialog open={showAccessDeniedDialog} onOpenChange={setShowAccessDeniedDialog}>

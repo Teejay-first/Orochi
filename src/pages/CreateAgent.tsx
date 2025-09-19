@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { AIVoiceInput } from '@/components/ui/ai-voice-input';
-import { ArrowLeft, Waves, User, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Waves, User, MessageSquare, Mail } from 'lucide-react';
 import { LiveKitRoom, RoomAudioRenderer, ControlBar } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,24 +11,29 @@ import { toast } from '@/hooks/use-toast';
 
 export const CreateAgent: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin, isSuperAdmin, loading } = useAuth();
+  const { isAdmin, isSuperAdmin, userProfile, loading, isAuthenticated } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
   const [lkToken, setLkToken] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [roomName, setRoomName] = useState<string | null>(null);
   const [showVoiceInterface, setShowVoiceInterface] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
-  // Check permissions
+  // Check authentication and permissions
   useEffect(() => {
-    if (!loading && !isAdmin && !isSuperAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permissions to create agents. Please contact support.",
-        variant: "destructive",
-      });
-      navigate('/');
+    if (loading) return;
+
+    if (!isAuthenticated) {
+      navigate('/auth?redirect=/create-agent');
+      return;
     }
-  }, [loading, isAdmin, isSuperAdmin, navigate]);
+
+    const hasAccess = isAdmin || isSuperAdmin || userProfile?.is_admin || userProfile?.is_super_admin;
+    
+    if (!hasAccess) {
+      setAccessDenied(true);
+    }
+  }, [loading, isAuthenticated, isAdmin, isSuperAdmin, userProfile, navigate]);
 
   const handleStartVoiceSession = async () => {
     setIsConnecting(true);
@@ -81,6 +86,39 @@ export const CreateAgent: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="max-w-md text-center p-8">
+          <div className="w-16 h-16 mx-auto mb-6 gradient-primary rounded-full flex items-center justify-center">
+            <Waves className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Restricted</h1>
+          <p className="text-muted-foreground mb-8">
+            Creating voice agents requires special permissions. Please contact support to request access to the agent creation system.
+          </p>
+          <div className="space-y-4">
+            <Button 
+              onClick={() => window.open('mailto:team@voiceagents.directory', '_blank')} 
+              className="w-full"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact Support
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/')} 
+              className="w-full"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Return to Home
+            </Button>
+          </div>
         </div>
       </div>
     );
