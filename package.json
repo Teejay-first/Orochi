@@ -50,6 +50,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.23.18",
     "input-otp": "^1.4.2",
     "livekit-client": "^2.15.7",
     "livekit-server-sdk": "^2.13.3",

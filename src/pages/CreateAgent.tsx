@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { AIVoiceInput } from '@/components/ui/ai-voice-input';
+import { VoiceChat } from '@/components/ui/voice-chat';
 import { ArrowLeft, Waves, User, MessageSquare, Mail } from 'lucide-react';
 import { LiveKitRoom, RoomAudioRenderer, ControlBar } from '@livekit/components-react';
 import '@livekit/components-styles';
@@ -235,46 +235,41 @@ export const CreateAgent: React.FC = () => {
           </div>
         ) : (
           // Voice Interface
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-2">
+          <div className="relative">
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                 You're now speaking with <span className="text-primary">Voxie</span>
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm md:text-base">
                 Tell me about the voice agent you'd like to create
               </p>
             </div>
 
-            <div className="bg-card/50 rounded-2xl p-8 border border-border/40">
-              {lkToken && serverUrl && (
-                <LiveKitRoom
-                  token={lkToken}
-                  serverUrl={serverUrl}
-                  connect
-                  audio
-                  className="lk-room"
-                >
-                  <RoomAudioRenderer />
-                  <div className="text-center py-8">
-                    <AIVoiceInput
-                      onStart={() => console.log('Voice input started')}
-                      onStop={(duration) => console.log('Voice input stopped, duration:', duration)}
-                      className="mb-6"
-                    />
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Voxie is listening and ready to help you create your agent
-                    </p>
-                    <ControlBar />
-                  </div>
-                </LiveKitRoom>
-              )}
-            </div>
+            {lkToken && serverUrl && (
+              <LiveKitRoom
+                token={lkToken}
+                serverUrl={serverUrl}
+                connect
+                audio
+                className="lk-room"
+                style={{ display: 'none' }}
+              >
+                <RoomAudioRenderer />
+              </LiveKitRoom>
+            )}
 
-            <div className="text-center mt-8">
+            <VoiceChat
+              onStart={() => console.log('Voice input started')}
+              onStop={(duration) => console.log('Voice input stopped, duration:', duration)}
+              demoMode={false}
+              className="min-h-[80vh]"
+            />
+
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
               <Button
                 onClick={handleEndSession}
                 variant="outline"
-                className="hover:bg-secondary/80"
+                className="bg-background/80 backdrop-blur-sm hover:bg-secondary/80"
               >
                 End Session
               </Button>
