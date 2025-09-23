@@ -48,7 +48,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           <div className="absolute top-2 right-2 z-10">
             <Badge className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white border-0 shadow-md">
               <Crown className="w-3 h-3 mr-1" />
-              Voxie Master
+              Master Agent
             </Badge>
           </div>
         )}
@@ -129,7 +129,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           size="sm"
         >
           {isMasterAgent ? <Crown className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
-          {isMasterAgent ? 'Talk to Voxie' : 'Talk'}
+          {isMasterAgent ? 'Access Master' : 'Talk'}
         </Button>
       </CardContent>
     </Card>
