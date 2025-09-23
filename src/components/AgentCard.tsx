@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Mic, Crown, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { StarRating } from '@/components/StarRating';
@@ -18,9 +20,15 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isSuperAdmin, isAdmin } = useAuth();
   const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
+  const [inviteError, setInviteError] = useState('');
   
   const isMasterAgent = agent.id === 'master-agent-aristocratic';
   const hasAdminAccess = isAdmin || isSuperAdmin;
+
+  const handleInviteSubmit = () => {
+    setInviteError('Invalid invite code. Please try again.');
+  };
 
   const handleTalk = () => {
     console.log('Talk clicked for agent:', agent.id, 'authenticated:', isAuthenticated);
@@ -140,18 +148,56 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-amber-500" />
-            Voxie Access Denied
+            Voxie Access - Invite Only
           </DialogTitle>
           <DialogDescription>
-            Voxie is the Master Agent with advanced capabilities. Access is restricted to Administrators only.
+            Access is invite only and restricted to media only.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-4">
           <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              Voxie represents the pinnacle of AI conversation technology with sophisticated reasoning capabilities and advanced prompt engineering.
+              Voxie represents the pinnacle of AI conversation technology with sophisticated reasoning capabilities and advanced ADAS techniques and proprietary SLMs.
             </p>
           </div>
+          
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="invite-code" className="text-sm font-medium">
+                Enter Invite Code
+              </Label>
+              <Input
+                id="invite-code"
+                type="text"
+                placeholder="Enter your invite code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                className="mt-1"
+              />
+              {inviteError && (
+                <p className="text-sm text-red-500 mt-1">{inviteError}</p>
+              )}
+            </div>
+            
+            <Button 
+              onClick={handleInviteSubmit}
+              className="w-full"
+              disabled={!inviteCode.trim()}
+            >
+              Submit Code
+            </Button>
+          </div>
+          
+          <div className="border-t pt-4">
+            <p className="text-xs text-muted-foreground mb-2">
+              Contact for invite codes:
+            </p>
+            <div className="space-y-1 text-xs">
+              <p>Press: <span className="font-mono">press@voxhive.ai</span></p>
+              <p>Investors: <span className="font-mono">investors@voxhive.ai</span></p>
+            </div>
+          </div>
+          
           <Button 
             variant="outline" 
             onClick={() => setShowAccessDenied(false)} 
