@@ -16,24 +16,26 @@ interface AgentCardProps {
 
 export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, isSuperAdmin } = useAuth();
+  const { isAuthenticated, isSuperAdmin, isAdmin } = useAuth();
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   
   const isMasterAgent = agent.id === 'master-agent-aristocratic';
+  const hasAdminAccess = isAdmin || isSuperAdmin;
 
   const handleTalk = () => {
     console.log('Talk clicked for agent:', agent.id, 'authenticated:', isAuthenticated);
-    
-    // Check if trying to access master agent without super admin privileges
-    if (isMasterAgent && !isSuperAdmin) {
-      setShowAccessDenied(true);
-      return;
-    }
     
     if (!isAuthenticated) {
       navigate(`/auth?redirect=/agent/${agent.id}`);
       return;
     }
+    
+    // Check if trying to access master agent without admin privileges
+    if (isMasterAgent && !hasAdminAccess) {
+      setShowAccessDenied(true);
+      return;
+    }
+    
     navigate(`/agent/${agent.id}`);
   };
 
@@ -141,7 +143,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
             Voxie Access Denied
           </DialogTitle>
           <DialogDescription>
-            Voxie is the Master Agent with advanced capabilities. Access is restricted to Super Administrators only.
+            Voxie is the Master Agent with advanced capabilities. Access is restricted to Administrators only.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-4">
