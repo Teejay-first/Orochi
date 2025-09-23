@@ -4,6 +4,8 @@ import { Mic, MicOff, Volume2, VolumeX, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useConnectionState, useRemoteParticipants, useLocalParticipant } from '@livekit/components-react';
+import { ConnectionState, Track } from 'livekit-client';
 
 interface VoiceChatProps {
   onStart?: () => void;
@@ -11,6 +13,7 @@ interface VoiceChatProps {
   onVolumeChange?: (volume: number) => void;
   className?: string;
   demoMode?: boolean;
+  conversationStarted?: boolean;
 }
 
 interface Particle {
@@ -27,7 +30,8 @@ export function VoiceChat({
   onStop,
   onVolumeChange,
   className,
-  demoMode = true
+  demoMode = true,
+  conversationStarted = false
 }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,8 +40,18 @@ export function VoiceChat({
   const [duration, setDuration] = useState(0);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [waveformData, setWaveformData] = useState<number[]>(Array(32).fill(0));
+  const [conversationTimer, setConversationTimer] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout>();
   const animationRef = useRef<number>();
+  const conversationStartTime = useRef<number | null>(null);
+
+  // LiveKit hooks for real-time state
+  const connectionState = demoMode ? ConnectionState.Connected : useConnectionState();
+  const participants = demoMode ? [] : useRemoteParticipants();
+  const localParticipant = demoMode ? null : useLocalParticipant();
+
+  // Get agent participant (first remote participant)
+  const agentParticipant = participants.length > 0 ? participants[0] : null;
 
   // Generate particles for ambient effect
   useEffect(() => {
@@ -91,15 +105,50 @@ export function VoiceChat({
     };
   }, []);
 
-  // Timer and waveform simulation
+  // Conversation timer - starts when conversation begins and runs continuously
   useEffect(() => {
-    if (isListening) {
+    if (conversationStarted && !conversationStartTime.current) {
+      conversationStartTime.current = Date.now();
+    }
+
+    if (conversationStarted) {
+      const timer = setInterval(() => {
+        if (conversationStartTime.current) {
+          const elapsed = Math.floor((Date.now() - conversationStartTime.current) / 1000);
+          setConversationTimer(elapsed);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [conversationStarted]);
+
+  // LiveKit state detection
+  useEffect(() => {
+    if (demoMode) return;
+
+    // Check if agent is speaking
+    if (agentParticipant) {
+      const audioTrackPub = Array.from(agentParticipant.audioTrackPublications.values())[0];
+      const agentSpeaking = audioTrackPub && !audioTrackPub.isMuted && audioTrackPub.isSubscribed;
+      setIsSpeaking(agentSpeaking || false);
+    }
+
+    // Check if local user is speaking (has mic active)
+    if (localParticipant && localParticipant.localParticipant) {
+      const micTrack = localParticipant.localParticipant.getTrackPublication(Track.Source.Microphone);
+      const userSpeaking = micTrack && !micTrack.isMuted;
+      setIsListening(userSpeaking || false);
+    }
+  }, [agentParticipant, localParticipant, demoMode]);
+
+  // Waveform simulation and volume detection
+  useEffect(() => {
+    if (isListening || isSpeaking) {
       intervalRef.current = setInterval(() => {
-        setDuration(prev => prev + 1);
-        
         // Simulate audio waveform
         const newWaveform = Array(32).fill(0).map(() => 
-          Math.random() * (isListening ? 100 : 20)
+          Math.random() * (isListening || isSpeaking ? 100 : 20)
         );
         setWaveformData(newWaveform);
         
@@ -121,7 +170,7 @@ export function VoiceChat({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isListening, onVolumeChange]);
+  }, [isListening, isSpeaking, onVolumeChange]);
 
   // Demo mode simulation
   useEffect(() => {
@@ -162,12 +211,11 @@ export function VoiceChat({
   const handleToggleListening = () => {
     if (demoMode) return;
     
+    // In LiveKit mode, this is handled by the room connection
+    // Just trigger callbacks
     if (isListening) {
-      setIsListening(false);
-      onStop?.(duration);
-      setDuration(0);
+      onStop?.(conversationTimer);
     } else {
-      setIsListening(true);
       onStart?.();
     }
   };
@@ -193,7 +241,7 @@ export function VoiceChat({
   };
 
   return (
-    <div className={cn("flex flex-col items-center justify-center min-h-screen bg-background relative overflow-hidden px-4", className)}>
+    <div className={cn("flex flex-col items-center justify-center min-h-[70vh] bg-background relative overflow-hidden px-4", className)}>
       {/* Ambient particles */}
       <div className="absolute inset-0 overflow-hidden">
         {particles.map(particle => (
@@ -369,7 +417,7 @@ export function VoiceChat({
           </motion.p>
           
           <p className="text-sm text-muted-foreground font-mono">
-            {formatTime(duration)}
+            {formatTime(conversationStarted ? conversationTimer : duration)}
           </p>
 
           {volume > 0 && (

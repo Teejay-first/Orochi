@@ -262,10 +262,11 @@ export const CreateAgent: React.FC = () => {
               onStart={() => console.log('Voice input started')}
               onStop={(duration) => console.log('Voice input stopped, duration:', duration)}
               demoMode={false}
-              className="min-h-[80vh]"
+              conversationStarted={!!lkToken}
+              className="min-h-[60vh]"
             />
 
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
               <Button
                 onClick={handleEndSession}
                 variant="outline"
