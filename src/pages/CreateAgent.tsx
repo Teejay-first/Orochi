@@ -262,7 +262,6 @@ export const CreateAgent: React.FC = () => {
               onStart={() => console.log('Voice input started')}
               onStop={(duration) => console.log('Voice input stopped, duration:', duration)}
               demoMode={false}
-              conversationStarted={!!lkToken}
               className="min-h-[60vh]"
             />
 
