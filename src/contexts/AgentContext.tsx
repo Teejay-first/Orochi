@@ -74,6 +74,28 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadAgents();
   }, []);
 
+  // Master Agent configuration
+  const MASTER_AGENT: Agent = {
+    id: 'master-agent-aristocratic',
+    name: 'Aristocratic Master Agent',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    tagline: 'The ultimate AI assistant with advanced reasoning and sophisticated conversation skills',
+    category: 'Business',
+    language: ['EN'],
+    prompt_source: 'aristocratic_master_agent',
+    voice: 'alloy',
+    model: 'gpt-realtime-2025-08-28',
+    status_type: 'deployed',
+    rating: 100,
+    average_rating: 5.0,
+    total_thumbs_up: 100,
+    total_thumbs_down: 0,
+    total_ratings: 20,
+    agent_price: 4,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
   const loadAgents = async () => {
     try {
       setLoading(true);
@@ -84,16 +106,19 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (error) throw error;
 
-      if (!data || data.length === 0) {
+      const dbAgents = data ? data.map(dbToAgent) : [];
+      
+      if (dbAgents.length === 0) {
         // Insert demo agents if no agents exist
         await insertDemoAgents();
       } else {
-        setAgents(data.map(dbToAgent));
+        // Always include master agent at the beginning of the list
+        setAgents([MASTER_AGENT, ...dbAgents]);
       }
     } catch (error) {
       console.error('Error loading agents:', error);
       toast.error('Failed to load agents');
-      setAgents(DEMO_AGENTS);
+      setAgents([MASTER_AGENT, ...DEMO_AGENTS]);
     } finally {
       setLoading(false);
     }
@@ -108,10 +133,12 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .select();
 
       if (error) throw error;
-      setAgents(data ? data.map(dbToAgent) : DEMO_AGENTS);
+      const dbAgents = data ? data.map(dbToAgent) : DEMO_AGENTS;
+      // Always include master agent at the beginning
+      setAgents([MASTER_AGENT, ...dbAgents]);
     } catch (error) {
       console.error('Error inserting demo agents:', error);
-      setAgents(DEMO_AGENTS);
+      setAgents([MASTER_AGENT, ...DEMO_AGENTS]);
     }
   };
 

@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { agents, loading } = useAgents();
-  const { isAdmin, userProfile, isAuthenticated, signInWithGoogle } = useAuth();
+  const { isAdmin, userProfile, isAuthenticated, signInWithGoogle, isSuperAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -25,6 +25,11 @@ export const Home: React.FC = () => {
 
   const filteredAgents = useMemo(() => {
     return agents.filter(agent => {
+      // Filter out master agent if user is not super admin
+      if (agent.id === 'master-agent-aristocratic' && !isSuperAdmin) {
+        return false;
+      }
+      
       const matchesSearch = searchQuery === '' || 
         agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         agent.tagline.toLowerCase().includes(searchQuery.toLowerCase());
@@ -35,7 +40,7 @@ export const Home: React.FC = () => {
       
       return matchesSearch && matchesCategory && matchesLanguage && matchesStatus;
     });
-  }, [agents, searchQuery, selectedCategory, selectedLanguage, selectedStatus]);
+  }, [agents, searchQuery, selectedCategory, selectedLanguage, selectedStatus, isSuperAdmin]);
 
   const sortedAgents = useMemo(() => {
     const filtered = [...filteredAgents];

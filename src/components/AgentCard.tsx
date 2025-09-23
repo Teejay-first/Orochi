@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Agent, STATUS_TYPES, PRICE_TYPES } from '@/types/agent';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Mic } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Mic, Crown, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { StarRating } from '@/components/StarRating';
 import { PopularityScore } from '@/components/PopularityScore';
@@ -15,10 +16,20 @@ interface AgentCardProps {
 
 export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isSuperAdmin } = useAuth();
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  
+  const isMasterAgent = agent.id === 'master-agent-aristocratic';
 
   const handleTalk = () => {
     console.log('Talk clicked for agent:', agent.id, 'authenticated:', isAuthenticated);
+    
+    // Check if trying to access master agent without super admin privileges
+    if (isMasterAgent && !isSuperAdmin) {
+      setShowAccessDenied(true);
+      return;
+    }
+    
     if (!isAuthenticated) {
       navigate(`/auth?redirect=/agent/${agent.id}`);
       return;
@@ -27,8 +38,19 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
   };
 
   return (
-    <Card className="group relative overflow-hidden border-border/40 bg-gradient-card hover:border-primary/30 transition-smooth shadow-card hover:shadow-glow">
-      <CardContent className="p-6 flex flex-col h-full">
+    <>
+      <Card className={`group relative overflow-hidden border-border/40 bg-gradient-card hover:border-primary/30 transition-smooth shadow-card hover:shadow-glow ${
+        isMasterAgent ? 'ring-2 ring-amber-500/50 shadow-amber-500/20' : ''
+      }`}>
+        {isMasterAgent && (
+          <div className="absolute top-2 right-2 z-10">
+            <Badge className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white border-0 shadow-md">
+              <Crown className="w-3 h-3 mr-1" />
+              Master Agent
+            </Badge>
+          </div>
+        )}
+        <CardContent className="p-6 flex flex-col h-full">
         <div className="flex items-start gap-4 flex-1">
           <div className="flex flex-col">
             <div className="relative flex-shrink-0 mb-2">
@@ -99,13 +121,45 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         
         <Button 
           onClick={handleTalk}
-          className="w-full group-hover:shadow-accent transition-spring mt-4"
+          className={`w-full group-hover:shadow-accent transition-spring mt-4 ${
+            isMasterAgent ? 'bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white border-0' : ''
+          }`}
           size="sm"
         >
-          <Mic className="w-4 h-4 mr-2" />
-          Talk
+          {isMasterAgent ? <Crown className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
+          {isMasterAgent ? 'Access Master' : 'Talk'}
         </Button>
       </CardContent>
     </Card>
+
+    {/* Access Denied Dialog */}
+    <Dialog open={showAccessDenied} onOpenChange={setShowAccessDenied}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-amber-500" />
+            Master Agent Access Denied
+          </DialogTitle>
+          <DialogDescription>
+            This is the Master Agent with advanced capabilities. Access is restricted to Super Administrators only.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 py-4">
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              The Master Agent represents the pinnacle of AI conversation technology with sophisticated reasoning capabilities and advanced prompt engineering.
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowAccessDenied(false)} 
+            className="w-full"
+          >
+            Return to Directory
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
