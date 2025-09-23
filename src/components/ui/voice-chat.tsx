@@ -14,6 +14,7 @@ interface VoiceChatProps {
   className?: string;
   demoMode?: boolean;
   conversationStarted?: boolean;
+  sessionStatus?: 'idle' | 'connecting' | 'connected' | 'ended';
 }
 
 interface Particle {
@@ -31,7 +32,8 @@ export function VoiceChat({
   onVolumeChange,
   className,
   demoMode = true,
-  conversationStarted = false
+  conversationStarted = false,
+  sessionStatus = 'idle'
 }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -45,10 +47,13 @@ export function VoiceChat({
   const animationRef = useRef<number>();
   const conversationStartTime = useRef<number | null>(null);
 
-  // LiveKit hooks for real-time state
-  const connectionState = demoMode ? ConnectionState.Connected : useConnectionState();
-  const participants = demoMode ? [] : useRemoteParticipants();
-  const localParticipant = demoMode ? null : useLocalParticipant();
+  // Use sessionStatus for RealtimeChat or LiveKit state for demo
+  const isRealtimeMode = !demoMode && sessionStatus !== undefined;
+  
+  // LiveKit hooks for real-time state (only when not using RealtimeChat)
+  const connectionState = demoMode || isRealtimeMode ? ConnectionState.Connected : useConnectionState();
+  const participants = demoMode || isRealtimeMode ? [] : useRemoteParticipants();
+  const localParticipant = demoMode || isRealtimeMode ? null : useLocalParticipant();
 
   // Get agent participant (first remote participant)
   const agentParticipant = participants.length > 0 ? participants[0] : null;
@@ -123,24 +128,31 @@ export function VoiceChat({
     }
   }, [conversationStarted]);
 
-  // LiveKit state detection
+  // State detection for RealtimeChat or LiveKit
   useEffect(() => {
     if (demoMode) return;
 
-    // Check if agent is speaking
-    if (agentParticipant) {
-      const audioTrackPub = Array.from(agentParticipant.audioTrackPublications.values())[0];
-      const agentSpeaking = audioTrackPub && !audioTrackPub.isMuted && audioTrackPub.isSubscribed;
-      setIsSpeaking(agentSpeaking || false);
-    }
+    if (isRealtimeMode) {
+      // Use sessionStatus for RealtimeChat mode
+      setIsListening(sessionStatus === 'connected');
+      setIsProcessing(sessionStatus === 'connecting');
+      setIsSpeaking(false); // This would be controlled by RealtimeChat callbacks
+    } else {
+      // LiveKit state detection
+      if (agentParticipant) {
+        const audioTrackPub = Array.from(agentParticipant.audioTrackPublications.values())[0];
+        const agentSpeaking = audioTrackPub && !audioTrackPub.isMuted && audioTrackPub.isSubscribed;
+        setIsSpeaking(agentSpeaking || false);
+      }
 
-    // Check if local user is speaking (has mic active)
-    if (localParticipant && localParticipant.localParticipant) {
-      const micTrack = localParticipant.localParticipant.getTrackPublication(Track.Source.Microphone);
-      const userSpeaking = micTrack && !micTrack.isMuted;
-      setIsListening(userSpeaking || false);
+      // Check if local user is speaking (has mic active)
+      if (localParticipant && localParticipant.localParticipant) {
+        const micTrack = localParticipant.localParticipant.getTrackPublication(Track.Source.Microphone);
+        const userSpeaking = micTrack && !micTrack.isMuted;
+        setIsListening(userSpeaking || false);
+      }
     }
-  }, [agentParticipant, localParticipant, demoMode]);
+  }, [agentParticipant, localParticipant, demoMode, isRealtimeMode, sessionStatus]);
 
   // Waveform simulation and volume detection
   useEffect(() => {
@@ -227,6 +239,13 @@ export function VoiceChat({
   };
 
   const getStatusText = () => {
+    if (isRealtimeMode) {
+      if (sessionStatus === 'connecting') return "Connecting to Voxie...";
+      if (sessionStatus === 'connected') return "Voxie is listening...";
+      if (sessionStatus === 'ended') return "Session ended";
+      return "Ready to connect";
+    }
+    
     if (isListening) return "Listening...";
     if (isProcessing) return "Processing...";
     if (isSpeaking) return "Speaking...";

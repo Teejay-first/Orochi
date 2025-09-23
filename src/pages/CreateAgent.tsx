@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { VoiceChat } from '@/components/ui/voice-chat';
 import { ArrowLeft, Waves, User, MessageSquare, Mail } from 'lucide-react';
-import { LiveKitRoom, RoomAudioRenderer, ControlBar } from '@livekit/components-react';
-import '@livekit/components-styles';
-import { supabase } from '@/integrations/supabase/client';
+import { RealtimeChat } from '@/utils/RealtimeAudio';
 import { toast } from '@/hooks/use-toast';
 
 export const CreateAgent: React.FC = () => {
   const navigate = useNavigate();
-  const { isAdmin, isSuperAdmin, userProfile, loading, isAuthenticated } = useAuth();
+  const { isAdmin, isSuperAdmin, userProfile, loading, isAuthenticated, user } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [lkToken, setLkToken] = useState<string | null>(null);
-  const [serverUrl, setServerUrl] = useState<string | null>(null);
-  const [roomName, setRoomName] = useState<string | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<'idle' | 'connecting' | 'connected' | 'ended'>('idle');
   const [showVoiceInterface, setShowVoiceInterface] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const realtimeChatRef = useRef<RealtimeChat | null>(null);
 
   // Check authentication and permissions
   useEffect(() => {
@@ -61,32 +59,62 @@ export const CreateAgent: React.FC = () => {
 
   const handleStartVoiceSession = async () => {
     setIsConnecting(true);
+    setSessionStatus('connecting');
+    
     try {
-      const room = `voxie-agent-${Date.now()}`;
-      setRoomName(room);
+      // Request microphone permission first
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Voxie's specialized instructions for agent creation
+      const instructions = `You are Voxie, VoxHive's master AI agent creation assistant. You are sophisticated, knowledgeable, and excellent at guiding users through creating perfect voice AI agents.
 
-      // Call our LiveKit token edge function
-      const { data, error } = await supabase.functions.invoke('livekit-token', {
-        body: { 
-          room,
-          agentName: 'voxie', // Voxie - the master agent
-          identity: `creator-${Math.random().toString(36).slice(2, 8)}`
-        }
+Your role is to:
+1. Interview users about their desired agent's purpose, personality, and capabilities
+2. Guide them through choosing the right voice, tone, and conversation style
+3. Help them define clear instructions and use cases for their agent
+4. Suggest improvements and best practices for agent design
+5. Be encouraging and supportive throughout the creation process
+
+Start by greeting the user warmly and asking what kind of voice agent they'd like to create. Listen carefully to their needs and ask thoughtful follow-up questions to help them build the perfect agent.
+
+Keep the conversation natural and engaging. You're not just collecting information - you're collaborating with them to bring their vision to life.`;
+
+      // Initialize realtime chat with Voxie configuration
+      realtimeChatRef.current = new RealtimeChat(
+        (message) => {
+          setMessages(prev => {
+            // Handle partial messages by updating the last message if it has the same ID
+            if (message.isPartial) {
+              const lastMessage = prev[prev.length - 1];
+              if (lastMessage && lastMessage.id === message.id && lastMessage.isPartial) {
+                return [...prev.slice(0, -1), message];
+              }
+            }
+            return [...prev, message];
+          });
+        },
+        setSessionStatus,
+        'master-agent-aristocratic', // Voxie's agent ID
+        user?.id
+      );
+      
+      await realtimeChatRef.current.init('alloy', { 
+        instructions, 
+        model: 'gpt-realtime-2025-08-28' 
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to get LiveKit token');
-      }
-
-      if (!data?.token || !data?.serverUrl) {
-        throw new Error('No token or server URL received from LiveKit service');
-      }
-
-      setLkToken(data.token);
-      setServerUrl(data.serverUrl);
       setShowVoiceInterface(true);
+      setSessionStatus('connected');
+      
+      toast({
+        title: "Connected to Voxie",
+        description: "Your AI agent creation session has started",
+      });
+      
     } catch (error: any) {
       console.error('Error starting voice session:', error);
+      setSessionStatus('ended');
+      
       toast({
         title: "Connection Error",
         description: error.message || 'Failed to start voice session',
@@ -98,10 +126,12 @@ export const CreateAgent: React.FC = () => {
   };
 
   const handleEndSession = () => {
+    if (realtimeChatRef.current) {
+      realtimeChatRef.current.disconnect();
+    }
     setShowVoiceInterface(false);
-    setLkToken(null);
-    setServerUrl(null);
-    setRoomName(null);
+    setSessionStatus('ended');
+    setMessages([]);
   };
 
   if (loading || (!userProfile && isAuthenticated)) {
@@ -245,24 +275,12 @@ export const CreateAgent: React.FC = () => {
               </p>
             </div>
 
-            {lkToken && serverUrl && (
-              <LiveKitRoom
-                token={lkToken}
-                serverUrl={serverUrl}
-                connect
-                audio
-                className="lk-room"
-                style={{ display: 'none' }}
-              >
-                <RoomAudioRenderer />
-              </LiveKitRoom>
-            )}
-
             <VoiceChat
               onStart={() => console.log('Voice input started')}
               onStop={(duration) => console.log('Voice input stopped, duration:', duration)}
               demoMode={false}
-              conversationStarted={!!lkToken}
+              conversationStarted={sessionStatus === 'connected'}
+              sessionStatus={sessionStatus}
               className="min-h-[60vh]"
             />
 
