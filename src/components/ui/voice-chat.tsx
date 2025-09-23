@@ -13,6 +13,7 @@ interface VoiceChatProps {
   onVolumeChange?: (volume: number) => void;
   className?: string;
   demoMode?: boolean;
+  conversationStarted?: boolean;
 }
 
 interface Particle {
@@ -29,7 +30,8 @@ export function VoiceChat({
   onStop,
   onVolumeChange,
   className,
-  demoMode = true
+  demoMode = true,
+  conversationStarted = false
 }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -103,15 +105,13 @@ export function VoiceChat({
     };
   }, []);
 
-  // Conversation timer - starts when connected to LiveKit and runs continuously
+  // Conversation timer - starts when conversation begins and runs continuously
   useEffect(() => {
-    const isConnected = connectionState === ConnectionState.Connected;
-    
-    if (isConnected && !demoMode && !conversationStartTime.current) {
+    if (conversationStarted && !conversationStartTime.current) {
       conversationStartTime.current = Date.now();
     }
 
-    if (isConnected && !demoMode) {
+    if (conversationStarted) {
       const timer = setInterval(() => {
         if (conversationStartTime.current) {
           const elapsed = Math.floor((Date.now() - conversationStartTime.current) / 1000);
@@ -121,44 +121,25 @@ export function VoiceChat({
 
       return () => clearInterval(timer);
     }
-  }, [connectionState, demoMode]);
+  }, [conversationStarted]);
 
   // LiveKit state detection
   useEffect(() => {
     if (demoMode) return;
 
-    let agentSpeaking = false;
-    let userSpeaking = false;
-
-    // Check if agent is speaking (has audio track and is producing audio)
+    // Check if agent is speaking
     if (agentParticipant) {
       const audioTrackPub = Array.from(agentParticipant.audioTrackPublications.values())[0];
-      if (audioTrackPub && audioTrackPub.track && !audioTrackPub.isMuted) {
-        // Check if there's actual audio being produced
-        agentSpeaking = audioTrackPub.isSubscribed && !audioTrackPub.track.isMuted;
-      }
+      const agentSpeaking = audioTrackPub && !audioTrackPub.isMuted && audioTrackPub.isSubscribed;
+      setIsSpeaking(agentSpeaking || false);
     }
 
-    // Check if local user is speaking (has mic active and unmuted)
-    if (localParticipant?.localParticipant) {
+    // Check if local user is speaking (has mic active)
+    if (localParticipant && localParticipant.localParticipant) {
       const micTrack = localParticipant.localParticipant.getTrackPublication(Track.Source.Microphone);
-      userSpeaking = micTrack && !micTrack.isMuted && micTrack.track && !micTrack.track.isMuted;
+      const userSpeaking = micTrack && !micTrack.isMuted;
+      setIsListening(userSpeaking || false);
     }
-
-    // Set states based on the detected audio activity
-    setIsSpeaking(agentSpeaking);
-    
-    // User is "listening" when agent is speaking or when neither is speaking (waiting for input)
-    // User is actively speaking when their mic is on and agent is not speaking
-    if (userSpeaking && !agentSpeaking) {
-      setIsListening(false); // User is speaking, not listening
-    } else {
-      setIsListening(!agentSpeaking); // User is listening when agent is not speaking
-    }
-
-    // Processing state can be managed separately if needed
-    setIsProcessing(false);
-    
   }, [agentParticipant, localParticipant, demoMode]);
 
   // Waveform simulation and volume detection
@@ -435,8 +416,8 @@ export function VoiceChat({
             {getStatusText()}
           </motion.p>
           
-           <p className="text-sm text-muted-foreground font-mono">
-            {formatTime(demoMode ? duration : conversationTimer)}
+          <p className="text-sm text-muted-foreground font-mono">
+            {formatTime(conversationStarted ? conversationTimer : duration)}
           </p>
 
           {volume > 0 && (
