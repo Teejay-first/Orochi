@@ -46,7 +46,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           <div className="absolute top-2 right-2 z-10">
             <Badge className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white border-0 shadow-md">
               <Crown className="w-3 h-3 mr-1" />
-              Master Agent
+              Voxie Master
             </Badge>
           </div>
         )}
@@ -127,7 +127,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
           size="sm"
         >
           {isMasterAgent ? <Crown className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
-          {isMasterAgent ? 'Access Master' : 'Talk'}
+          {isMasterAgent ? 'Talk to Voxie' : 'Talk'}
         </Button>
       </CardContent>
     </Card>
@@ -138,16 +138,16 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-amber-500" />
-            Master Agent Access Denied
+            Voxie Access Denied
           </DialogTitle>
           <DialogDescription>
-            This is the Master Agent with advanced capabilities. Access is restricted to Super Administrators only.
+            Voxie is the Master Agent with advanced capabilities. Access is restricted to Super Administrators only.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-4">
           <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              The Master Agent represents the pinnacle of AI conversation technology with sophisticated reasoning capabilities and advanced prompt engineering.
+              Voxie represents the pinnacle of AI conversation technology with sophisticated reasoning capabilities and advanced prompt engineering.
             </p>
           </div>
           <Button 

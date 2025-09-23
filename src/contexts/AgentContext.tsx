@@ -77,8 +77,8 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Master Agent configuration
   const MASTER_AGENT: Agent = {
     id: 'master-agent-aristocratic',
-    name: 'Aristocratic Master Agent',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    name: 'Voxie',
+    avatarUrl: '/src/assets/voxie-logo.png',
     tagline: 'The ultimate AI assistant with advanced reasoning and sophisticated conversation skills',
     category: 'Business',
     language: ['EN'],
