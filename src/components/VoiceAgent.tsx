@@ -33,7 +33,7 @@ export default function VoiceAgent({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchToken = async () => {
+    const fetchToken = async (retryCount = 0) => {
       try {
         onStatusChange?.('connecting');
         
@@ -47,6 +47,14 @@ export default function VoiceAgent({
 
         if (error) {
           console.error('Error fetching token:', error);
+          
+          // Retry once on failure
+          if (retryCount === 0) {
+            console.log('Retrying token fetch...');
+            setTimeout(() => fetchToken(1), 1000);
+            return;
+          }
+          
           setError(error.message || 'Failed to get token');
           onStatusChange?.('error');
           return;
@@ -62,6 +70,14 @@ export default function VoiceAgent({
         }
       } catch (err) {
         console.error('Token fetch error:', err);
+        
+        // Retry once on failure
+        if (retryCount === 0) {
+          console.log('Retrying token fetch...');
+          setTimeout(() => fetchToken(1), 1000);
+          return;
+        }
+        
         setError(err instanceof Error ? err.message : 'Unknown error');
         onStatusChange?.('error');
       }

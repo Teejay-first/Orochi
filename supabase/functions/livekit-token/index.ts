@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { AccessToken, AgentDispatchClient, type VideoGrant } from "https://esm.sh/livekit-server-sdk@2.13.0";
+import { AccessToken, AgentDispatchClient, type VideoGrant } from "npm:livekit-server-sdk@^2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,11 +45,18 @@ serve(async (req) => {
     };
     at.addGrant(grant);
 
-    // Explicitly dispatch the agent into this room
+    // Explicitly dispatch the agent into this room with timeout
     try {
       console.log('Dispatching agent to room:', { roomName, agentName });
       const dispatcher = new AgentDispatchClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-      await dispatcher.createDispatch(roomName, agentName);
+      
+      // Add 5 second timeout for dispatch to prevent hanging
+      const dispatchPromise = dispatcher.createDispatch(roomName, agentName);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Agent dispatch timeout')), 5000)
+      );
+      
+      await Promise.race([dispatchPromise, timeoutPromise]);
       console.log('Agent dispatched successfully');
     } catch (dispatchError) {
       console.error('Error dispatching agent:', dispatchError);
