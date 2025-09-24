@@ -30,9 +30,9 @@ serve(async (req) => {
       region = "global" // or "eu"
     } = body;
 
-    // Sanitize voice against supported list
+    // Sanitize voice against supported list (only official OpenAI voices)
     const supportedVoices = new Set([
-      'alloy','ash','ballad','coral','echo','sage','shimmer','verse','marin','cedar'
+      'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'
     ]);
     const safeVoice = supportedVoices.has(voice) ? voice : 'alloy';
 
@@ -43,7 +43,7 @@ serve(async (req) => {
       voice: safeVoice,
       // Basic instructions at root level (hosted prompts handled via session.update after connection)
       ...(instructions ? { instructions } : {}),
-      expires_in: 60, // ephemeral key TTL
+      // Note: expires_in is not a valid parameter for OpenAI sessions endpoint
     };
 
     console.log("Creating ephemeral token with config:", sessionConfig);
