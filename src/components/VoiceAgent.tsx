@@ -6,7 +6,9 @@ import {
   VoiceAssistantControlBar,
   BarVisualizer,
   useVoiceAssistant,
+  ConnectionStateToast,
 } from '@livekit/components-react';
+import { DefaultReconnectPolicy } from 'livekit-client';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceAgentProps {
@@ -89,18 +91,24 @@ export default function VoiceAgent({
       serverUrl={serverUrl} 
       token={token} 
       connect
+      options={{
+        reconnectPolicy: new DefaultReconnectPolicy([1000, 2000, 5000, 10000, 20000]),
+      }}
       onConnected={() => {
         onConversationStart?.();
         onStatusChange?.('connected');
       }}
       onDisconnected={() => {
-        onConversationEnd?.();
-        onStatusChange?.('ended');
+        // Don't instantly end; allow auto-reconnect UI to handle it
+        onStatusChange?.('reconnecting');
+        // Optional: if you want a hard end after prolonged failure, add a timeout here
+        // setTimeout(() => onConversationEnd?.(), 30000);
       }}
     >
       <VoiceAgentUI />
       <RoomAudioRenderer />
       <VoiceAssistantControlBar />
+      <ConnectionStateToast />
     </LiveKitRoom>
   );
 }

@@ -13,14 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    const { room, identity, agentName } = await req.json();
+    const { room, identity, agentName = Deno.env.get("AGENT_NAME") ?? "aristocratic_master_agent" } = await req.json();
 
     const roomName = String(room || `agent-demo-${Date.now()}`);
     const userIdentity = typeof identity === 'string' 
       ? identity 
       : `user-${Math.random().toString(36).slice(2, 8)}`;
-
-    const agentNameStr = typeof agentName === 'string' ? agentName : undefined;
 
     // Get LiveKit credentials from environment
     const LIVEKIT_API_KEY = Deno.env.get('LIVEKIT_API_KEY');
@@ -31,12 +29,12 @@ serve(async (req) => {
       throw new Error('LiveKit credentials not configured');
     }
 
-    console.log('Creating LiveKit token for:', { roomName, userIdentity, agentNameStr });
+    console.log('Creating LiveKit token for:', { roomName, userIdentity, agentName });
 
-    // Mint a short-lived token
+    // Create token for the web client with 1 hour TTL
     const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
       identity: userIdentity,
-      ttl: '10m',
+      ttl: 3600, // 1 hour - TTL only impacts initial join
     });
 
     const grant: VideoGrant = {
@@ -47,17 +45,15 @@ serve(async (req) => {
     };
     at.addGrant(grant);
 
-    // Dispatch the agent to join the room
-    if (agentNameStr) {
-      try {
-        console.log('Dispatching agent to room:', { roomName, agentNameStr });
-        const dispatchClient = new AgentDispatchClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-        await dispatchClient.createDispatch(roomName, agentNameStr);
-        console.log('Agent dispatched successfully');
-      } catch (dispatchError) {
-        console.error('Error dispatching agent:', dispatchError);
-        // Continue with token generation even if dispatch fails
-      }
+    // Explicitly dispatch the agent into this room
+    try {
+      console.log('Dispatching agent to room:', { roomName, agentName });
+      const dispatcher = new AgentDispatchClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+      await dispatcher.createDispatch(roomName, agentName);
+      console.log('Agent dispatched successfully');
+    } catch (dispatchError) {
+      console.error('Error dispatching agent:', dispatchError);
+      // Continue with token generation even if dispatch fails
     }
 
     const token = await at.toJwt(); // v2 API is async
