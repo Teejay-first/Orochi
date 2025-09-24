@@ -41,12 +41,8 @@ serve(async (req) => {
     const sessionConfig = {
       model,
       voice: safeVoice,
-      // You can seed session params here (same shape as `session.update`)
-      session: {
-        type: "realtime",
-        ...(prompt ? { prompt } : {}),
-        ...(instructions ? { instructions } : {}),
-      },
+      // Basic instructions at root level (hosted prompts handled via session.update after connection)
+      ...(instructions ? { instructions } : {}),
       expires_in: 60, // ephemeral key TTL
     };
 

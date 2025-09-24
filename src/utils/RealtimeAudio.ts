@@ -32,6 +32,8 @@ export class RealtimeChat {
   private sessionStartTime: number | null = null;
   private isMicMuted: boolean = false;
   private isSpeakerMuted: boolean = false;
+  private pendingPromptConfig: any = null;
+  private pendingInstructionsOverride: string | null = null;
 
   constructor(
     private onMessage: (message: RealtimeMessage) => void,
@@ -44,7 +46,7 @@ export class RealtimeChat {
     document.body.appendChild(this.audioEl);
   }
 
-  async init(agentVoice: string, options?: { agent?: any; instructions?: string; promptId?: string; model?: string }) {
+  async init(agentVoice: string, options?: { agent?: any; instructions?: string; promptId?: string; model?: string; prompt?: any }) {
     try {
       this.onStatusChange('connecting');
       this.sessionStartTime = Date.now(); // Track session start time
@@ -76,12 +78,12 @@ export class RealtimeChat {
         instructionsOverride = `You are ${agent.name}${agent.tagline ? `, ${agent.tagline}` : ""}.`;
       }
       
-      // Get ephemeral token from our Supabase Edge Function
+      // Get ephemeral token from our Supabase Edge Function (basic config only)
       const { data: tokenData, error } = await supabase.functions.invoke("realtime-token", {
         body: {
           voice: agentVoice,
           model: this.sessionModel,
-          ...(promptConfig ? { prompt: promptConfig } : {}),
+          // Only send basic instructions, hosted prompts handled via session.update
           ...(instructionsOverride ? { instructions: instructionsOverride } : {}),
         }
       });
@@ -139,6 +141,10 @@ export class RealtimeChat {
           content: 'Connected! Start speaking or type a message.',
           timestamp: Date.now(),
         });
+        
+        // Store prompt config for session.update after session.created
+        this.pendingPromptConfig = promptConfig;
+        this.pendingInstructionsOverride = instructionsOverride;
       });
 
       // Create and set local description
@@ -185,21 +191,36 @@ export class RealtimeChat {
       case 'session.created': {
         console.log('Session created event received');
         if (this.dc) {
-          // Configure session with input transcription enabled
-          const sessionUpdate = {
-            type: 'session.update',
-            session: {
-              input_audio_transcription: {
-                enabled: true
-              }
+          // Build session update payload
+          const sessionPayload: any = {
+            input_audio_transcription: {
+              enabled: true
             }
           };
 
-          // Note: prompt configuration is now handled at token creation time
-          // Only add additional session configs here if needed
+          // Add hosted prompt configuration if available
+          if (this.pendingPromptConfig) {
+            sessionPayload.prompt = this.pendingPromptConfig;
+            console.log('Adding hosted prompt config:', this.pendingPromptConfig);
+          }
+
+          // Add instruction override if available
+          if (this.pendingInstructionsOverride) {
+            sessionPayload.instructions = this.pendingInstructionsOverride;
+            console.log('Adding instruction override:', this.pendingInstructionsOverride);
+          }
+
+          const sessionUpdate = {
+            type: 'session.update',
+            session: sessionPayload
+          };
           
           this.dc.send(JSON.stringify(sessionUpdate));
-          console.log('Applied session update with transcription enabled');
+          console.log('Applied session update:', sessionUpdate);
+          
+          // Clear pending configs
+          this.pendingPromptConfig = null;
+          this.pendingInstructionsOverride = null;
         }
         break;
       }
