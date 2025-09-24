@@ -79,6 +79,13 @@ export class RealtimeChat {
       }
       
       // Get ephemeral token from our Supabase Edge Function (basic config only)
+      console.log("Requesting ephemeral token with config:", {
+        voice: agentVoice,
+        model: this.sessionModel,
+        hasInstructions: !!instructionsOverride,
+        promptConfig: promptConfig
+      });
+      
       const { data: tokenData, error } = await supabase.functions.invoke("realtime-token", {
         body: {
           voice: agentVoice,
@@ -89,9 +96,11 @@ export class RealtimeChat {
       });
 
       if (error || !tokenData?.client_secret?.value) {
-        console.error("Token error:", error);
-        throw new Error("Failed to get ephemeral token");
+        console.error("Token error details:", { error, tokenData });
+        throw new Error(`Failed to get ephemeral token: ${error?.message || 'No token received'}`);
       }
+
+      console.log("Successfully received ephemeral token");
 
       const EPHEMERAL_KEY = tokenData.client_secret.value;
       console.log("Got ephemeral token, initializing WebRTC...");
@@ -201,7 +210,9 @@ export class RealtimeChat {
           // Add hosted prompt configuration if available
           if (this.pendingPromptConfig) {
             sessionPayload.prompt = this.pendingPromptConfig;
-            console.log('Adding hosted prompt config:', this.pendingPromptConfig);
+            console.log('🔥 ADDING HOSTED PROMPT CONFIG:', JSON.stringify(this.pendingPromptConfig, null, 2));
+          } else {
+            console.log('⚠️ NO PENDING PROMPT CONFIG FOUND');
           }
 
           // Add instruction override if available
