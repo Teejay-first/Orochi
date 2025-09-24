@@ -34,6 +34,16 @@ export default function VoiceAgent({
   useEffect(() => {
     (async () => {
       onStatusChange?.("connecting");
+      
+      // Request microphone permissions first
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (permissionError) {
+        console.error("Microphone permission denied:", permissionError);
+        onStatusChange?.("error");
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("livekit-token", {
         body: { room, identity, agentName },
       });
@@ -84,10 +94,34 @@ export default function VoiceAgent({
 
 function VoiceAgentUI() {
   const { state, audioTrack } = useVoiceAssistant();
+  
+  const getStateColor = (state: any) => {
+    switch (state) {
+      case "listening": return "text-green-500";
+      case "thinking": return "text-blue-500";
+      case "speaking": return "text-purple-500";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getStateIcon = (state: any) => {
+    switch (state) {
+      case "listening": return "🎤";
+      case "thinking": return "🤔";
+      case "speaking": return "🗣️";
+      default: return "💬";
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-6">
       <BarVisualizer state={state} trackRef={audioTrack} barCount={9} />
-      <p className="text-sm text-muted-foreground">assistant state: {state}</p>
+      <div className="flex items-center gap-2">
+        <span className="text-lg">{getStateIcon(state)}</span>
+        <p className={`text-sm font-medium ${getStateColor(state)}`}>
+          {!state || state === "disconnected" ? "Ready to chat" : `Agent is ${state}...`}
+        </p>
+      </div>
     </div>
   );
 }
