@@ -321,7 +321,7 @@ export const AgentSession: React.FC = () => {
                 <span className="text-primary font-semibold">Voxie</span>
               </h1>
               <p className="text-muted-foreground text-sm mt-2">
-                Master Agent Creator - LiveKit Connection
+                Master Agent Creator - VoxHive.ai Connection
               </p>
             </div>
           </div>
@@ -342,6 +342,7 @@ export const AgentSession: React.FC = () => {
                 onStop={handleEndSession}
                 onVolumeChange={() => {}}
                 sessionStatus={sessionStatus}
+                conversationStarted={sessionStatus === 'connected'}
                 demoMode={false}
                 useLiveKit={true}
               />

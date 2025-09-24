@@ -53,7 +53,7 @@ export function VoiceChat({
   const isRealtimeMode = !demoMode && sessionStatus !== undefined && !useLiveKit;
   const isLiveKitMode = !demoMode && useLiveKit;
   
-  // LiveKit hooks for real-time state (only when using LiveKit)
+  // LiveKit hooks for real-time state (only when inside LiveKitRoom)
   const connectionState = demoMode || isRealtimeMode ? ConnectionState.Connected : useConnectionState();
   const participants = demoMode || isRealtimeMode ? [] : useRemoteParticipants();
   const localParticipant = demoMode || isRealtimeMode ? null : useLocalParticipant();
@@ -243,8 +243,15 @@ export function VoiceChat({
 
   const getStatusText = () => {
     if (isRealtimeMode) {
-      if (sessionStatus === 'connecting') return "Connecting to Voxie...";
-      if (sessionStatus === 'connected') return "Voxie is listening...";
+      if (sessionStatus === 'connecting') return "Connecting to VoxHive.ai...";
+      if (sessionStatus === 'connected') return "VoxHive.ai is listening...";
+      if (sessionStatus === 'ended') return "Session ended";
+      return "Ready to connect";
+    }
+    
+    if (isLiveKitMode) {
+      if (sessionStatus === 'connecting') return "Connecting to VoxHive.ai...";
+      if (sessionStatus === 'connected') return "VoxHive.ai is listening...";
       if (sessionStatus === 'ended') return "Session ended";
       return "Ready to connect";
     }
