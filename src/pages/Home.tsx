@@ -73,13 +73,13 @@ export const Home: React.FC = () => {
 
   const handleCreateAgentClick = () => {
     if (!isAuthenticated) {
-      // Redirect to auth page with create-agent as the target
-      navigate('/auth?redirect=/create-agent');
+      // Redirect to auth page with master agent as the target
+      navigate('/auth?redirect=/agent/master-agent-aristocratic');
       return;
     }
 
     if (isAdmin || userProfile?.is_super_admin) {
-      navigate('/create-agent');
+      navigate('/agent/master-agent-aristocratic');
     } else {
       setShowAccessDeniedDialog(true);
     }

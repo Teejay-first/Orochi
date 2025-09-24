@@ -15,6 +15,7 @@ interface VoiceChatProps {
   demoMode?: boolean;
   conversationStarted?: boolean;
   sessionStatus?: 'idle' | 'connecting' | 'connected' | 'ended';
+  useLiveKit?: boolean; // New prop to force LiveKit usage
 }
 
 interface Particle {
@@ -33,7 +34,8 @@ export function VoiceChat({
   className,
   demoMode = true,
   conversationStarted = false,
-  sessionStatus = 'idle'
+  sessionStatus = 'idle',
+  useLiveKit = false
 }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,9 +50,10 @@ export function VoiceChat({
   const conversationStartTime = useRef<number | null>(null);
 
   // Use sessionStatus for RealtimeChat or LiveKit state for demo
-  const isRealtimeMode = !demoMode && sessionStatus !== undefined;
+  const isRealtimeMode = !demoMode && sessionStatus !== undefined && !useLiveKit;
+  const isLiveKitMode = !demoMode && useLiveKit;
   
-  // LiveKit hooks for real-time state (only when not using RealtimeChat)
+  // LiveKit hooks for real-time state (only when using LiveKit)
   const connectionState = demoMode || isRealtimeMode ? ConnectionState.Connected : useConnectionState();
   const participants = demoMode || isRealtimeMode ? [] : useRemoteParticipants();
   const localParticipant = demoMode || isRealtimeMode ? null : useLocalParticipant();

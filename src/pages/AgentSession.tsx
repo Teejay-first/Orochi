@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX, Settings } from 'lucide-react';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
+import { VoiceChat } from '@/components/ui/voice-chat';
+import { LiveKitRoom } from '@livekit/components-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +36,8 @@ export const AgentSession: React.FC = () => {
   const [selectedVoice, setSelectedVoice] = useState('alloy');
   const [latencyTarget, setLatencyTarget] = useState([200]);
   const [maxDuration, setMaxDuration] = useState([300]);
+  const [livekitToken, setLivekitToken] = useState<string>('');
+  const [livekitUrl, setLivekitUrl] = useState<string>('');
   // Removed push-to-talk functionality - keeping only hands-free mode
   
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
@@ -123,6 +127,42 @@ export const AgentSession: React.FC = () => {
         conversationIdRef.current = conversationId;
       }
 
+      // Check if this is the master agent - use LiveKit
+      const isMasterAgent = agent.id === 'master-agent-aristocratic';
+      
+      if (isMasterAgent) {
+        // For master agent, get LiveKit token and connect
+        setSessionStatus('connecting');
+        
+        // Request microphone permission first
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Get LiveKit token
+        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('livekit-token', {
+          body: {
+            room: `master-agent-${Date.now()}`,
+            identity: `user-${user?.id || 'anonymous'}`,
+            agentName: 'aristocratic_master_agent'
+          }
+        });
+
+        if (tokenError) {
+          throw new Error(`Failed to get LiveKit token: ${tokenError.message}`);
+        }
+
+        setLivekitToken(tokenData.token);
+        setLivekitUrl(tokenData.serverUrl);
+        
+        toast({
+          title: "Connected to Voxie",
+          description: "LiveKit connection established with master agent",
+        });
+        
+        setSessionStatus('connected');
+        return;
+      }
+
+      // For other agents, use RealtimeChat (OpenAI Realtime API)
       // Request microphone permission first
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
@@ -256,6 +296,83 @@ export const AgentSession: React.FC = () => {
     );
   }
 
+  const isMasterAgent = agent?.id === 'master-agent-aristocratic';
+
+  // If this is the master agent and connected, show VoiceChat component
+  if (isMasterAgent && sessionStatus === 'connected') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-border/20">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/')}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <div className="text-center">
+              <h1 className="text-2xl font-medium text-foreground">
+                You're now speaking with{' '}
+                <span className="text-primary font-semibold">Voxie</span>
+              </h1>
+              <p className="text-muted-foreground text-sm mt-2">
+                Master Agent Creator - LiveKit Connection
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* VoiceChat Component for LiveKit */}
+        <div className="flex-1">
+          {livekitToken && livekitUrl ? (
+            <LiveKitRoom
+              token={livekitToken}
+              serverUrl={livekitUrl}
+              connect={true}
+              audio={true}
+              video={false}
+            >
+              <VoiceChat
+                onStart={() => {}}
+                onStop={handleEndSession}
+                onVolumeChange={() => {}}
+                sessionStatus={sessionStatus}
+                demoMode={false}
+                useLiveKit={true}
+              />
+            </LiveKitRoom>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Setting up LiveKit connection...</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Controls */}
+        <div className="border-t border-border/20 p-6">
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleEndSession} 
+              variant="destructive" 
+              size="lg"
+              className="px-8"
+            >
+              End Session
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -274,10 +391,10 @@ export const AgentSession: React.FC = () => {
           <div className="text-center">
             <h1 className="text-2xl font-medium text-foreground">
               You're now speaking with{' '}
-              <span className="text-primary font-semibold">{agent.name}</span>
+              <span className="text-primary font-semibold">{agent?.name}</span>
             </h1>
             <p className="text-muted-foreground text-sm mt-2">
-              {agent.tagline}
+              {agent?.tagline}
             </p>
           </div>
         </div>
@@ -290,7 +407,7 @@ export const AgentSession: React.FC = () => {
           <p className="text-muted-foreground text-lg">
             {sessionStatus === 'idle' && 'Ready to start your voice session'}
             {sessionStatus === 'connecting' && 'Connecting to voice agent...'}
-            {sessionStatus === 'connected' && `${agent.name} is listening and ready to help you`}
+            {sessionStatus === 'connected' && `${agent?.name} is listening and ready to help you`}
             {sessionStatus === 'ended' && 'Voice session has ended'}
           </p>
         </div>
@@ -424,7 +541,7 @@ export const AgentSession: React.FC = () => {
               Return Home
             </Button>
             <SessionRating 
-              agentId={agent.id} 
+              agentId={agent?.id || ''} 
               sessionId={conversationIdRef.current || undefined}
             />
           </div>
