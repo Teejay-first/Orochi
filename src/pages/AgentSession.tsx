@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX, Settings } from 'lucide-react';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
-import { VoiceChat } from '@/components/ui/voice-chat';
+import { VoiceChat } from "@/components/ui/voice-chat";
+import VoiceAgent from "@/components/VoiceAgent";
 import { LiveKitRoom } from '@livekit/components-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,8 +37,9 @@ export const AgentSession: React.FC = () => {
   const [selectedVoice, setSelectedVoice] = useState('alloy');
   const [latencyTarget, setLatencyTarget] = useState([200]);
   const [maxDuration, setMaxDuration] = useState([300]);
-  const [livekitToken, setLivekitToken] = useState<string>('');
-  const [livekitUrl, setLivekitUrl] = useState<string>('');
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationStarted, setConversationStarted] = useState(false);
+  const [liveKitRoom] = useState(`agent-${Date.now()}`);
   // Removed push-to-talk functionality - keeping only hands-free mode
   
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
@@ -92,6 +94,8 @@ export const AgentSession: React.FC = () => {
         .single();
 
       if (error) throw error;
+      
+      setConversationId(data.id);
       return data.id;
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -100,7 +104,7 @@ export const AgentSession: React.FC = () => {
   };
 
   const updateConversationStatus = async (status: 'active' | 'completed' | 'ended') => {
-    if (!conversationIdRef.current) return;
+    if (!conversationId) return;
 
     try {
       const { error } = await supabase
@@ -109,7 +113,7 @@ export const AgentSession: React.FC = () => {
           status,
           ended_at: status !== 'active' ? new Date().toISOString() : null
         })
-        .eq('id', conversationIdRef.current);
+        .eq('id', conversationId);
 
       if (error) throw error;
     } catch (error) {
@@ -123,42 +127,13 @@ export const AgentSession: React.FC = () => {
     try {
       // Create conversation record
       const conversationId = await createConversationRecord();
-      if (conversationId) {
-        conversationIdRef.current = conversationId;
-      }
 
       // Check if this is the master agent - use LiveKit
       const isMasterAgent = agent.id === 'master-agent-aristocratic';
       
       if (isMasterAgent) {
-        // For master agent, get LiveKit token and connect
+        // For master agent, just set status - VoiceAgent component handles connection
         setSessionStatus('connecting');
-        
-        // Request microphone permission first
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // Get LiveKit token
-        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('livekit-token', {
-          body: {
-            room: `master-agent-${Date.now()}`,
-            identity: `user-${user?.id || 'anonymous'}`,
-            agentName: 'aristocratic_master_agent'
-          }
-        });
-
-        if (tokenError) {
-          throw new Error(`Failed to get LiveKit token: ${tokenError.message}`);
-        }
-
-        setLivekitToken(tokenData.token);
-        setLivekitUrl(tokenData.serverUrl);
-        
-        toast({
-          title: "Connected to Voxie",
-          description: "LiveKit connection established with master agent",
-        });
-        
-        setSessionStatus('connected');
         return;
       }
 
@@ -298,8 +273,8 @@ export const AgentSession: React.FC = () => {
 
   const isMasterAgent = agent?.id === 'master-agent-aristocratic';
 
-  // If this is the master agent and connected, show VoiceChat component
-  if (isMasterAgent && sessionStatus === 'connected') {
+  // If this is the master agent, show special UI
+  if (isMasterAgent) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
@@ -327,49 +302,51 @@ export const AgentSession: React.FC = () => {
           </div>
         </div>
 
-        {/* VoiceChat Component for LiveKit */}
-        <div className="flex-1">
-          {livekitToken && livekitUrl ? (
-            <LiveKitRoom
-              token={livekitToken}
-              serverUrl={livekitUrl}
-              connect={true}
-              audio={true}
-              video={false}
-            >
-              <VoiceChat
-                onStart={() => {}}
-                onStop={handleEndSession}
-                onVolumeChange={() => {}}
-                sessionStatus={sessionStatus}
-                conversationStarted={sessionStatus === 'connected'}
-                demoMode={false}
-                useLiveKit={true}
-              />
-            </LiveKitRoom>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Setting up LiveKit connection...</p>
-              </div>
-            </div>
-          )}
+        {/* Voice Interface */}
+        <div className="flex-1 flex items-center justify-center">
+          <VoiceAgent 
+            room={liveKitRoom} 
+            identity={user?.id || `user-${Date.now()}`} 
+            agentName="aristocratic_master_agent"
+            onStatusChange={(status) => setSessionStatus(status as any)}
+            onConversationStart={() => {
+              setConversationStarted(true);
+              createConversationRecord();
+            }}
+            onConversationEnd={() => {
+              setConversationStarted(false);
+              handleEndSession();
+            }}
+          />
         </div>
 
-        {/* Bottom Controls */}
-        <div className="border-t border-border/20 p-6">
-          <div className="flex justify-center">
-            <Button 
-              onClick={handleEndSession} 
-              variant="destructive" 
-              size="lg"
-              className="px-8"
-            >
-              End Session
-            </Button>
+        {/* Bottom Controls - Show end session if needed */}
+        {sessionStatus === 'connected' && (
+          <div className="border-t border-border/20 p-6">
+            <div className="flex justify-center">
+              <Button 
+                onClick={handleEndSession} 
+                variant="destructive" 
+                size="lg"
+                className="px-8"
+              >
+                End Session
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Session Rating */}
+        {sessionStatus === 'ended' && conversationId && (
+          <div className="border-t border-border/20 p-6">
+            <div className="flex justify-center">
+              <SessionRating 
+                agentId={agent?.id || ''} 
+                sessionId={conversationId}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
