@@ -18,7 +18,17 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const { voice = 'alloy', instructions, model } = await req.json();
+    const body = await req.json();
+    const {
+      model = "gpt-realtime-2025-08-28",
+      voice = "alloy",
+      // NEW: prompt config from client
+      prompt, // { id: string; version?: string; variables?: Record<string, unknown> }
+      // Optional: direct instructions to override overlapping prompt fields
+      instructions,
+      // Optional: EU residency toggle
+      region = "global" // or "eu"
+    } = body;
 
     // Sanitize voice against supported list
     const supportedVoices = new Set([
@@ -26,16 +36,24 @@ serve(async (req) => {
     ]);
     const safeVoice = supportedVoices.has(voice) ? voice : 'alloy';
 
+    const base = region === "eu" ? "https://eu.api.openai.com" : "https://api.openai.com";
+
     const sessionConfig = {
-      model: model || "gpt-realtime-2025-08-28",
+      model,
       voice: safeVoice,
-      instructions: instructions || "You are a helpful assistant.",
+      // You can seed session params here (same shape as `session.update`)
+      session: {
+        type: "realtime",
+        ...(prompt ? { prompt } : {}),
+        ...(instructions ? { instructions } : {}),
+      },
+      expires_in: 60, // ephemeral key TTL
     };
 
     console.log("Creating ephemeral token with config:", sessionConfig);
 
     // Request an ephemeral token from OpenAI
-    const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+    const response = await fetch(`${base}/v1/realtime/sessions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,

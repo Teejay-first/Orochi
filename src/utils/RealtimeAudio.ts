@@ -44,22 +44,45 @@ export class RealtimeChat {
     document.body.appendChild(this.audioEl);
   }
 
-  async init(agentVoice: string, options?: { instructions?: string; promptId?: string; model?: string }) {
+  async init(agentVoice: string, options?: { agent?: any; instructions?: string; promptId?: string; model?: string }) {
     try {
       this.onStatusChange('connecting');
       this.sessionStartTime = Date.now(); // Track session start time
       
       // Persist session options for later session.update
+      const agent = options?.agent;
       this.sessionInstructions = options?.instructions;
       this.sessionPromptId = options?.promptId;
       if (options?.model) this.sessionModel = options.model;
+      
+      // Prepare prompt object for hosted prompts
+      let promptConfig = null;
+      let instructionsOverride = null;
+
+      if (agent?.prompt_source === 'prompt_id' && agent.prompt_id) {
+        promptConfig = {
+          id: agent.prompt_id,
+          ...(agent.prompt_version ? { version: agent.prompt_version } : {}),
+          ...(agent.prompt_variables ? { variables: agent.prompt_variables } : {}),
+        };
+      }
+
+      // Handle instructions override or fallback
+      if (agent?.instructions_override) {
+        instructionsOverride = agent.instructions_override;
+      } else if (agent?.prompt_source === 'text' && agent.prompt_text) {
+        instructionsOverride = agent.prompt_text;
+      } else if (agent?.name || agent?.tagline) {
+        instructionsOverride = `You are ${agent.name}${agent.tagline ? `, ${agent.tagline}` : ""}.`;
+      }
       
       // Get ephemeral token from our Supabase Edge Function
       const { data: tokenData, error } = await supabase.functions.invoke("realtime-token", {
         body: {
           voice: agentVoice,
-          instructions: options?.instructions,
-          model: this.sessionModel
+          model: this.sessionModel,
+          ...(promptConfig ? { prompt: promptConfig } : {}),
+          ...(instructionsOverride ? { instructions: instructionsOverride } : {}),
         }
       });
 
@@ -168,15 +191,13 @@ export class RealtimeChat {
             session: {
               input_audio_transcription: {
                 enabled: true
-              },
-              instructions: this.sessionInstructions || "You are a helpful assistant."
+              }
             }
           };
 
-          if (this.sessionPromptId) {
-            sessionUpdate.session.instructions = `Use prompt ID: ${this.sessionPromptId}. ${sessionUpdate.session.instructions}`;
-          }
-
+          // Note: prompt configuration is now handled at token creation time
+          // Only add additional session configs here if needed
+          
           this.dc.send(JSON.stringify(sessionUpdate));
           console.log('Applied session update with transcription enabled');
         }

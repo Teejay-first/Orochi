@@ -141,16 +141,7 @@ export const AgentSession: React.FC = () => {
       // Request microphone permission first
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Prepare instructions based on agent configuration
-      let instructions = "You are a helpful assistant.";
-      
-      if (agent.prompt_source === 'text' && agent.prompt_text) {
-        instructions = agent.prompt_text;
-      } else if (agent.prompt_source === 'prompt_id' && agent.prompt_id) {
-        instructions = `Use prompt ID: ${agent.prompt_id}. You are ${agent.name}, ${agent.tagline}`;
-      }
-      
-      // Initialize realtime chat
+      // Initialize realtime chat with proper prompt configuration
       realtimeChatRef.current = new RealtimeChat(
         (message) => {
           setMessages(prev => {
@@ -170,8 +161,7 @@ export const AgentSession: React.FC = () => {
       );
       
       await realtimeChatRef.current.init(selectedVoice, { 
-        instructions, 
-        promptId: agent.prompt_id, 
+        agent,
         model: agent.model || 'gpt-realtime-2025-08-28' 
       });
 

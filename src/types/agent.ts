@@ -7,7 +7,10 @@ export interface Agent {
   language: string[];
   prompt_source: 'text' | 'prompt_id' | 'aristocratic_master_agent';
   prompt_text?: string;
-  prompt_id?: string;
+  prompt_id?: string;            // pmpt_***
+  prompt_version?: string;       // optional pin
+  prompt_variables?: Record<string, unknown>; // { city: "Paris" } etc.
+  instructions_override?: string; // optional
   voice: string;
   model: string;
   status_type: 'deployed' | 'testing' | 'building' | 'repairing';
