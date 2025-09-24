@@ -1,5 +1,5 @@
-import '@livekit/components-styles';
-import { useEffect, useState } from 'react';
+import "@livekit/components-styles";
+import { useEffect, useState } from "react";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -7,9 +7,9 @@ import {
   BarVisualizer,
   useVoiceAssistant,
   ConnectionStateToast,
-} from '@livekit/components-react';
-import { DefaultReconnectPolicy } from 'livekit-client';
-import { supabase } from '@/integrations/supabase/client';
+} from "@livekit/components-react";
+import { DefaultReconnectPolicy } from "livekit-client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceAgentProps {
   room: string;
@@ -20,104 +20,57 @@ interface VoiceAgentProps {
   onConversationEnd?: () => void;
 }
 
-export default function VoiceAgent({ 
-  room, 
-  identity, 
-  agentName = 'aristocratic_master_agent',
+export default function VoiceAgent({
+  room,
+  identity,
+  agentName = "aristocratic_master_agent",
   onStatusChange,
   onConversationStart,
-  onConversationEnd
+  onConversationEnd,
 }: VoiceAgentProps) {
   const [token, setToken] = useState<string | null>(null);
-  const [serverUrl, setServerUrl] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState<string>("");
 
   useEffect(() => {
-    const fetchToken = async (retryCount = 0) => {
-      try {
-        onStatusChange?.('connecting');
-        
-        const { data, error } = await supabase.functions.invoke('livekit-token', {
-          body: { 
-            room, 
-            identity, 
-            agentName 
-          }
-        });
-
-        if (error) {
-          console.error('Error fetching token:', error);
-          
-          // Retry once on failure
-          if (retryCount === 0) {
-            console.log('Retrying token fetch...');
-            setTimeout(() => fetchToken(1), 1000);
-            return;
-          }
-          
-          setError(error.message || 'Failed to get token');
-          onStatusChange?.('error');
-          return;
-        }
-
-        if (data?.token && data?.serverUrl) {
-          setToken(data.token);
-          setServerUrl(data.serverUrl);
-          onStatusChange?.('connected');
-        } else {
-          setError('Invalid token response');
-          onStatusChange?.('error');
-        }
-      } catch (err) {
-        console.error('Token fetch error:', err);
-        
-        // Retry once on failure
-        if (retryCount === 0) {
-          console.log('Retrying token fetch...');
-          setTimeout(() => fetchToken(1), 1000);
-          return;
-        }
-        
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        onStatusChange?.('error');
+    (async () => {
+      onStatusChange?.("connecting");
+      const { data, error } = await supabase.functions.invoke("livekit-token", {
+        body: { room, identity, agentName },
+      });
+      if (error || !data?.token || !data?.serverUrl) {
+        onStatusChange?.("error");
+        console.error("token error", error ?? data);
+        return;
       }
-    };
-
-    fetchToken();
+      setToken(data.token);
+      setServerUrl(data.serverUrl);
+    })();
   }, [room, identity, agentName, onStatusChange]);
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-40 text-destructive">
-        <p className="text-sm">Connection failed: {error}</p>
-      </div>
-    );
-  }
 
   if (!token || !serverUrl) {
     return (
       <div className="flex flex-col items-center justify-center h-40">
-        <p className="text-sm opacity-70">Connecting to VoxHive.ai...</p>
+        <p className="text-sm opacity-70">connecting to voxhive.ai…</p>
       </div>
     );
   }
 
   return (
-    <LiveKitRoom 
-      serverUrl={serverUrl} 
-      token={token} 
+    <LiveKitRoom
+      serverUrl={serverUrl}
+      token={token}
       connect
       options={{
         reconnectPolicy: new DefaultReconnectPolicy([1000, 2000, 5000, 10000, 20000]),
       }}
       onConnected={() => {
         onConversationStart?.();
-        onStatusChange?.('connected');
+        onStatusChange?.("connected");
       }}
       onDisconnected={() => {
-        // Don't instantly end; allow auto-reconnect UI to handle it
-        onStatusChange?.('reconnecting');
-        // Optional: if you want a hard end after prolonged failure, add a timeout here
+        // don't instantly end; allow auto-reconnect UI to handle it
+        onStatusChange?.("reconnecting");
+        // optional: if you want a hard end after prolonged failure, add a timeout here
         // setTimeout(() => onConversationEnd?.(), 30000);
       }}
     >
@@ -131,26 +84,10 @@ export default function VoiceAgent({
 
 function VoiceAgentUI() {
   const { state, audioTrack } = useVoiceAssistant();
-
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-6">
-      <div className="relative">
-        <BarVisualizer 
-          state={state} 
-          trackRef={audioTrack} 
-          barCount={9}
-          options={{
-            minHeight: 20,
-            maxHeight: 60,
-          }}
-        />
-      </div>
-      
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Assistant state: {state}
-        </p>
-      </div>
+      <BarVisualizer state={state} trackRef={audioTrack} barCount={9} />
+      <p className="text-sm text-muted-foreground">assistant state: {state}</p>
     </div>
   );
 }
