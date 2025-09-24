@@ -46,7 +46,7 @@ export class RealtimeChat {
     document.body.appendChild(this.audioEl);
   }
 
-  async init(agentVoice: string, options?: { agent?: any; instructions?: string; promptId?: string; model?: string; prompt?: any }) {
+  async init(agentVoice: string, options?: { agent?: any; instructions?: string; promptId?: string; model?: string; prompt?: any; defaultPromptId?: string }) {
     try {
       this.onStatusChange('connecting');
       this.sessionStartTime = Date.now(); // Track session start time
@@ -61,12 +61,22 @@ export class RealtimeChat {
       let promptConfig = null;
       let instructionsOverride = null;
 
-      if (agent?.prompt_source === 'prompt_id' && agent.prompt_id) {
+      // Use centralized prompt configuration that can override to default prompt
+      const { getPromptConfig } = await import('@/config/prompts');
+      promptConfig = getPromptConfig(agent);
+      
+      // If using default prompt override, log it
+      if (options?.defaultPromptId) {
         promptConfig = {
-          id: agent.prompt_id,
-          ...(agent.prompt_version ? { version: agent.prompt_version } : {}),
-          ...(agent.prompt_variables ? { variables: agent.prompt_variables } : {}),
+          id: options.defaultPromptId,
+          variables: agent?.prompt_variables || {}
         };
+        console.log('🎯 USING MANUAL OVERRIDE PROMPT ID:', options.defaultPromptId);
+      }
+      
+      if (promptConfig) {
+        console.log('🎯 USING PROMPT ID:', promptConfig.id, promptConfig.id === agent?.prompt_id ? '(FROM AGENT)' : '(DEFAULT OVERRIDE)');
+        console.log('📋 PROMPT CONFIG (NO VERSION = LATEST):', JSON.stringify(promptConfig, null, 2));
       }
 
       // Handle instructions override or fallback
@@ -240,10 +250,19 @@ export class RealtimeChat {
         console.log('🔥 SESSION UPDATED - Effective Configuration:', JSON.stringify(event.session, null, 2));
         // Log specifically the prompt configuration being used
         if (event.session?.prompt) {
-          console.log('📋 PROMPT CONFIG CONFIRMED:', {
+          console.log('📋 PROMPT CONFIG CONFIRMED BY OPENAI:', {
             id: event.session.prompt.id,
-            version: event.session.prompt.version || 'LATEST',
-            variables: event.session.prompt.variables
+            version: event.session.prompt.version || 'LATEST (Auto-resolved by OpenAI)',
+            variables: event.session.prompt.variables,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Log success message for debugging
+          this.onMessage({
+            id: Date.now().toString(),
+            type: 'system',
+            content: `✅ Using latest version of prompt: ${event.session.prompt.id.slice(-8)}... ${event.session.prompt.version ? `(v${event.session.prompt.version})` : '(latest)'}`,
+            timestamp: Date.now(),
           });
         }
         if (event.session?.instructions) {

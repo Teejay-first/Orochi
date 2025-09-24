@@ -162,7 +162,10 @@ export const AgentSession: React.FC = () => {
       
       await realtimeChatRef.current.init(selectedVoice, { 
         agent,
-        model: agent.model || 'gpt-realtime-2025-08-28' 
+        model: agent.model || 'gpt-realtime-2025-08-28',
+        // Optional: Override with default prompt ID to always use latest "default" prompt
+        // defaultPromptId: 'pmpt_your_default_prompt_id_here' // Uncomment and set your default prompt ID
+        // OR better: Set DEFAULT_PROMPT_ID in src/config/prompts.ts to apply globally
       });
 
       // Start with hands-free mode enabled
