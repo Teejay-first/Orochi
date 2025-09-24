@@ -235,6 +235,22 @@ export class RealtimeChat {
         }
         break;
       }
+
+      case 'session.updated': {
+        console.log('🔥 SESSION UPDATED - Effective Configuration:', JSON.stringify(event.session, null, 2));
+        // Log specifically the prompt configuration being used
+        if (event.session?.prompt) {
+          console.log('📋 PROMPT CONFIG CONFIRMED:', {
+            id: event.session.prompt.id,
+            version: event.session.prompt.version || 'LATEST',
+            variables: event.session.prompt.variables
+          });
+        }
+        if (event.session?.instructions) {
+          console.log('📝 INSTRUCTIONS CONFIRMED:', event.session.instructions);
+        }
+        break;
+      }
       
       case 'input_audio_transcription.delta': {
         console.log('User audio transcription delta:', event.delta);

@@ -30,9 +30,9 @@ serve(async (req) => {
       region = "global" // or "eu"
     } = body;
 
-    // Sanitize voice against supported list (only official OpenAI voices)
+    // Sanitize voice against supported list (only official OpenAI Realtime voices)
     const supportedVoices = new Set([
-      'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'
+      'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse'
     ]);
     const safeVoice = supportedVoices.has(voice) ? voice : 'alloy';
 

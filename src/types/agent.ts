@@ -75,9 +75,7 @@ export const VOICES = [
   'echo',
   'sage',
   'shimmer',
-  'verse',
-  'marin',
-  'cedar'
+  'verse'
 ] as const;
 
 export const STATUS_TYPES = [
