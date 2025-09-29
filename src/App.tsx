@@ -10,6 +10,7 @@ import { AgentSession } from "./pages/AgentSession";
 import { Conversations } from "./pages/Conversations";
 import { Admin } from "./pages/Admin";
 import { Auth } from "./pages/Auth";
+import { Dashboard } from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/agent/:id" element={<AgentSession />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -8,7 +8,7 @@ import { UserDisplay } from '@/components/UserDisplay';
 import { SortDropdown, SortOption, TimeFilter } from '@/components/SortDropdown';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Settings, Waves, Plus, MessageSquare, Mail } from 'lucide-react';
+import { Settings, Waves, Plus, MessageSquare, Mail, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Home: React.FC = () => {
@@ -130,6 +130,16 @@ export const Home: React.FC = () => {
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Admin
+                </Button>
+              )}
+              {isAuthenticated && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/dashboard')}
+                  className="hover:bg-secondary-hover transition-smooth"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Dashboard
                 </Button>
               )}
             </div>
