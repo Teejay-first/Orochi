@@ -34,17 +34,6 @@ export const UserDisplay: React.FC = () => {
 
   return (
     <div className="flex items-center gap-3">
-      {/* Conversations button - more visible */}
-      <Button 
-        variant="ghost" 
-        size="sm"
-        onClick={() => navigate('/conversations')} 
-        className="flex items-center gap-2"
-      >
-        <MessageSquare className="h-4 w-4" />
-        <span className="hidden sm:inline">My Conversations</span>
-      </Button>
-      
       {/* User dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -80,10 +69,6 @@ export const UserDisplay: React.FC = () => {
             </div>
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate('/conversations')} className="cursor-pointer">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            My Conversations
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             Sign out

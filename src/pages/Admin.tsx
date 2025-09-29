@@ -443,9 +443,8 @@ export const Admin: React.FC = () => {
 
       <main className="p-6">
         <Tabs defaultValue="agents" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="agents">Agents Management</TabsTrigger>
-            <TabsTrigger value="conversations">Conversations</TabsTrigger>
           </TabsList>
           
           <TabsContent value="agents" className="mt-6">
@@ -578,9 +577,6 @@ export const Admin: React.FC = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="conversations" className="mt-6">
-            <ConversationsRegistry />
-          </TabsContent>
         </Tabs>
       </main>
     </div>

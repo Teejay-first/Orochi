@@ -7,7 +7,7 @@ import { AgentProvider } from "@/contexts/AgentContext";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { Home } from "./pages/Home";
 import { AgentSession } from "./pages/AgentSession";
-import { Conversations } from "./pages/Conversations";
+
 import { Admin } from "./pages/Admin";
 import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
@@ -26,7 +26,7 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/agent/:id" element={<AgentSession />} />
-            <Route path="/conversations" element={<Conversations />} />
+            
             <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
