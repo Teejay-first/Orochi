@@ -82,6 +82,17 @@
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
+    /* Liquid Glass Effects */
+    --glass-bg: 220 13% 15% / 0.1;
+    --glass-border: 220 9% 95% / 0.1;
+    --glass-shadow: 0 8px 32px 0 hsl(220 13% 0% / 0.2);
+    --glass-blur: blur(12px);
+    
+    /* Button Glass Effects */
+    --button-glass-primary: 270 70% 65% / 0.15;
+    --button-glass-secondary: 220 13% 15% / 0.2;
+    --button-glass-outline: 220 9% 95% / 0.05;
+    
     --radius: 0.75rem;
   }
 }
@@ -146,5 +157,116 @@
   
   .voice-indicator.active {
     @apply shadow-accent animate-pulse-slow;
+  }
+
+  /* Liquid Glass Button Base */
+  .btn-glass {
+    @apply backdrop-blur-sm border border-white/10 relative overflow-hidden;
+    background: linear-gradient(135deg, 
+      hsl(var(--glass-bg)), 
+      hsl(var(--glass-bg))
+    );
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.05) 50%, 
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .btn-glass:hover::before {
+    opacity: 1;
+  }
+
+  .btn-glass:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      0 12px 40px 0 rgba(0, 0, 0, 0.3),
+      0 0 20px 0 hsl(var(--primary) / 0.2),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-glass:active {
+    transform: translateY(-1px) scale(0.98);
+    transition: all 0.1s ease;
+  }
+
+  /* Primary Glass Variant */
+  .btn-glass-primary {
+    background: linear-gradient(135deg, 
+      hsl(var(--button-glass-primary)), 
+      hsl(var(--primary) / 0.1)
+    );
+    border-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary-glow));
+  }
+
+  .btn-glass-primary:hover {
+    background: linear-gradient(135deg, 
+      hsl(var(--primary) / 0.25), 
+      hsl(var(--primary-glow) / 0.15)
+    );
+    color: hsl(var(--primary-foreground));
+    box-shadow: 
+      0 12px 40px 0 rgba(0, 0, 0, 0.3),
+      0 0 30px 0 hsl(var(--primary) / 0.4),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Secondary Glass Variant */
+  .btn-glass-secondary {
+    background: linear-gradient(135deg, 
+      hsl(var(--button-glass-secondary)), 
+      hsl(var(--secondary) / 0.15)
+    );
+    border-color: hsl(var(--secondary-foreground) / 0.1);
+    color: hsl(var(--secondary-foreground));
+  }
+
+  /* Outline Glass Variant */
+  .btn-glass-outline {
+    background: linear-gradient(135deg, 
+      hsl(var(--button-glass-outline)), 
+      hsl(var(--background) / 0.1)
+    );
+    border-color: hsl(var(--border));
+    color: hsl(var(--foreground));
+  }
+
+  /* Destructive Glass Variant */
+  .btn-glass-destructive {
+    background: linear-gradient(135deg, 
+      hsl(var(--destructive) / 0.15), 
+      hsl(var(--destructive) / 0.1)
+    );
+    border-color: hsl(var(--destructive) / 0.2);
+    color: hsl(var(--destructive-foreground));
+  }
+
+  .btn-glass-destructive:hover {
+    background: linear-gradient(135deg, 
+      hsl(var(--destructive) / 0.25), 
+      hsl(var(--destructive) / 0.15)
+    );
+    box-shadow: 
+      0 12px 40px 0 rgba(0, 0, 0, 0.3),
+      0 0 30px 0 hsl(var(--destructive) / 0.4),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
   }
 }
