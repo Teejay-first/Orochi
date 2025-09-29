@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAgents } from "@/contexts/AgentContext";
+import { useNavigate } from "react-router-dom";
 import { Plus, Search, Settings, Pause, Archive, Play, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ interface AgentDirectoryProps {
 export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
   const { agents, loading } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const filteredAgents = agents.filter(agent =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -88,7 +90,7 @@ export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
             />
           </div>
           <Button variant="outline">Import</Button>
-          <Button>
+          <Button onClick={() => navigate('/agent/master-agent-aristocratic')}>
             <Plus className="w-4 h-4 mr-2" />
             Create an Agent
           </Button>
