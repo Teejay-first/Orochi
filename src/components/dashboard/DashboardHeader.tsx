@@ -15,7 +15,7 @@ export function DashboardHeader() {
           variant="outline"
           size="sm"
           onClick={() => navigate('/')}
-          className="hover:bg-secondary-hover transition-smooth"
+          className="hover:bg-primary/10 hover:border-primary-glow hover:text-primary-glow transition-smooth"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Marketplace
