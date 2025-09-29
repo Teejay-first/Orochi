@@ -3,6 +3,9 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { AgentDirectory } from "@/components/dashboard/AgentDirectory";
+import { SubAgents } from "@/components/dashboard/SubAgents";
+import { Connectors } from "@/components/dashboard/Connectors";
+import { SelfImprovement } from "@/components/dashboard/SelfImprovement";
 import { CallHistory } from "@/components/dashboard/CallHistory";
 import { Analytics } from "@/components/dashboard/Analytics";
 import { AgentConfiguration } from "@/components/dashboard/AgentConfiguration";
@@ -11,6 +14,9 @@ import { PhoneNumbers } from "@/components/dashboard/PhoneNumbers";
 
 export type DashboardView = 
   | "agents" 
+  | "sub-agents"
+  | "connectors"
+  | "self-improvement"
   | "knowledge-base" 
   | "phone-numbers" 
   | "call-history" 
@@ -32,6 +38,12 @@ export const Dashboard = () => {
             }}
           />
         );
+      case "sub-agents":
+        return <SubAgents />;
+      case "connectors":
+        return <Connectors />;
+      case "self-improvement":
+        return <SelfImprovement />;
       case "agent-config":
         return (
           <AgentConfiguration 

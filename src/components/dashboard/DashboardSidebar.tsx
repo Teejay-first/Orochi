@@ -1,4 +1,5 @@
-import { Bot, BookOpen, Phone, PhoneCall, History, BarChart3, User } from "lucide-react";
+import { useState } from "react";
+import { Bot, BookOpen, Phone, PhoneCall, History, BarChart3, User, Network, Plug, TrendingUp, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardView } from "@/pages/Dashboard";
 import {
@@ -26,6 +27,12 @@ const buildItems = [
   { title: "Knowledge Base", view: "knowledge-base" as const, icon: BookOpen },
 ];
 
+const agentSubItems = [
+  { title: "Sub-agents", view: "sub-agents" as const, icon: Network },
+  { title: "Connectors", view: "connectors" as const, icon: Plug },
+  { title: "Self-improvement", view: "self-improvement" as const, icon: TrendingUp },
+];
+
 const deployItems = [
   { title: "Phone Numbers", view: "phone-numbers" as const, icon: Phone },
 ];
@@ -38,6 +45,9 @@ const monitorItems = [
 export function DashboardSidebar({ currentView, onViewChange }: DashboardSidebarProps) {
   const { user } = useAuth();
   const { state } = useSidebar();
+  const [agentsExpanded, setAgentsExpanded] = useState(true);
+
+  const isAgentSubView = ["agents", "sub-agents", "connectors", "self-improvement"].includes(currentView);
 
   return (
     <Sidebar className="border-r border-border">
@@ -72,18 +82,44 @@ export function DashboardSidebar({ currentView, onViewChange }: DashboardSidebar
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {buildItems.map((item) => (
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => {
+                      setAgentsExpanded(!agentsExpanded);
+                      if (!isAgentSubView) onViewChange("agents");
+                    }}
+                    isActive={isAgentSubView}
+                    className="w-full justify-start"
+                  >
+                    <Bot className="w-4 h-4" />
+                    <span>Agents</span>
+                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${agentsExpanded ? 'rotate-90' : ''}`} />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                
+                {agentsExpanded && agentSubItems.map((item) => (
                   <SidebarMenuItem key={item.view}>
                     <SidebarMenuButton 
                       onClick={() => onViewChange(item.view)}
                       isActive={currentView === item.view}
-                      className="w-full justify-start"
+                      className="w-full justify-start pl-8"
                     >
                       <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+                
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => onViewChange("knowledge-base")}
+                    isActive={currentView === "knowledge-base"}
+                    className="w-full justify-start"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Knowledge Base</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
