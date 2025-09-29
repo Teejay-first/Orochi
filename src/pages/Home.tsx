@@ -114,12 +114,12 @@ export const Home: React.FC = () => {
                 Submit
               </Button>
               <Button
-                onClick={() => handleCreateAgentClick()}
+                onClick={() => navigate('/dashboard')}
                 variant="secondary"
                 className="hover:bg-secondary-hover transition-smooth"
               >
-                <Waves className="w-4 h-4 mr-2" />
-                Create Agent
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Dashboard
               </Button>
               <UserDisplay />
               {isAdmin && (
@@ -130,16 +130,6 @@ export const Home: React.FC = () => {
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Admin
-                </Button>
-              )}
-              {isAuthenticated && (
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/dashboard')}
-                  className="hover:bg-secondary-hover transition-smooth"
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Dashboard
                 </Button>
               )}
             </div>
