@@ -35,6 +35,10 @@ const agentSubItems = [
 
 const deployItems = [
   { title: "Phone Numbers", view: "phone-numbers" as const, icon: Phone },
+  { title: "Website Widget", view: "website-widget" as const, icon: Plug },
+  { title: "WhatsApp", view: "whatsapp" as const, icon: PhoneCall },
+  { title: "Mobile App", view: "mobile-app" as const, icon: Phone },
+  { title: "API", view: "api" as const, icon: Network },
 ];
 
 const monitorItems = [
@@ -84,16 +88,19 @@ export function DashboardSidebar({ currentView, onViewChange }: DashboardSidebar
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton 
-                    onClick={() => {
-                      setAgentsExpanded(!agentsExpanded);
-                      if (!isAgentSubView) onViewChange("agents");
-                    }}
-                    isActive={isAgentSubView}
+                    onClick={() => onViewChange("agents")}
+                    isActive={currentView === "agents"}
                     className="w-full justify-start"
                   >
                     <Bot className="w-4 h-4" />
                     <span>Agents</span>
-                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${agentsExpanded ? 'rotate-90' : ''}`} />
+                    <ChevronRight 
+                      className={`w-4 h-4 ml-auto transition-transform ${agentsExpanded ? 'rotate-90' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAgentsExpanded(!agentsExpanded);
+                      }}
+                    />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 
@@ -118,6 +125,17 @@ export function DashboardSidebar({ currentView, onViewChange }: DashboardSidebar
                   >
                     <BookOpen className="w-4 h-4" />
                     <span>Knowledge Base</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => onViewChange("use-cases")}
+                    isActive={currentView === "use-cases"}
+                    className="w-full justify-start"
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Popular Use Cases</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

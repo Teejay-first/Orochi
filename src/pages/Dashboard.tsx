@@ -11,14 +11,21 @@ import { Analytics } from "@/components/dashboard/Analytics";
 import { AgentConfiguration } from "@/components/dashboard/AgentConfiguration";
 import { KnowledgeBase } from "@/components/dashboard/KnowledgeBase";
 import { PhoneNumbers } from "@/components/dashboard/PhoneNumbers";
+import { DeployChannels } from "@/components/dashboard/DeployChannels";
+import { PopularUseCases } from "@/components/dashboard/PopularUseCases";
 
 export type DashboardView = 
   | "agents" 
   | "sub-agents"
   | "connectors"
   | "self-improvement"
-  | "knowledge-base" 
-  | "phone-numbers" 
+  | "knowledge-base"
+  | "use-cases"
+  | "phone-numbers"
+  | "website-widget"
+  | "whatsapp"
+  | "mobile-app"
+  | "api"
   | "call-history" 
   | "analytics"
   | "agent-config";
@@ -53,8 +60,14 @@ export const Dashboard = () => {
         );
       case "knowledge-base":
         return <KnowledgeBase />;
+      case "use-cases":
+        return <PopularUseCases />;
       case "phone-numbers":
-        return <PhoneNumbers />;
+      case "website-widget":
+      case "whatsapp":
+      case "mobile-app":
+      case "api":
+        return <DeployChannels currentChannel={currentView} />;
       case "call-history":
         return <CallHistory />;
       case "analytics":
