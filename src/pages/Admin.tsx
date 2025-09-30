@@ -104,20 +104,33 @@ export const Admin: React.FC = () => {
       return;
     }
 
-    const agentData = {
-      ...formData,
-      prompt_text: formData.prompt_source === 'text' ? formData.prompt_text : undefined,
-      prompt_id: formData.prompt_source === 'prompt_id' ? formData.prompt_id : undefined,
-    };
+    try {
+      const agentData = {
+        ...formData,
+        prompt_text: formData.prompt_source === 'text' ? formData.prompt_text : undefined,
+        prompt_id: formData.prompt_source === 'prompt_id' ? formData.prompt_id : undefined,
+      };
 
-    if (editingAgent) {
-      await updateAgent(editingAgent.id, agentData);
-    } else {
-      await addAgent(agentData);
+      if (editingAgent) {
+        await updateAgent(editingAgent.id, agentData);
+      } else {
+        await addAgent(agentData);
+      }
+
+      setIsModalOpen(false);
+      resetForm();
+      toast({
+        title: "Success",
+        description: `Agent ${editingAgent ? 'updated' : 'created'} successfully`,
+      });
+    } catch (error: any) {
+      console.error('Error in handleSubmit:', error);
+      toast({
+        title: "Error",
+        description: error?.message || `Failed to ${editingAgent ? 'update' : 'create'} agent`,
+        variant: "destructive",
+      });
     }
-
-    setIsModalOpen(false);
-    resetForm();
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -140,18 +153,20 @@ export const Admin: React.FC = () => {
   };
 
   const handleDuplicate = async (agent: Agent) => {
-    const duplicatedAgent = {
-      ...agent,
-      id: crypto.randomUUID(),
-      name: `${agent.name} (Copy)`,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
-    await addAgent(duplicatedAgent);
-    toast({
-      title: "Agent Duplicated",
-      description: `${agent.name} has been duplicated successfully.`,
-    });
+    try {
+      await duplicateAgent(agent.id);
+      toast({
+        title: "Agent Duplicated",
+        description: `${agent.name} has been duplicated successfully.`,
+      });
+    } catch (error: any) {
+      console.error('Error duplicating agent:', error);
+      toast({
+        title: "Error",
+        description: error?.message || 'Failed to duplicate agent',
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExport = () => {

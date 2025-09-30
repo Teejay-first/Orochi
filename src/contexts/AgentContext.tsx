@@ -132,7 +132,14 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const insertDemoAgents = async () => {
     try {
-      const demoData = DEMO_AGENTS.map(agentToDb);
+      // Get current user for owner_user_id
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const demoData = DEMO_AGENTS.map(agent => ({
+        ...agentToDb(agent),
+        owner_user_id: user?.id || null
+      }));
+      
       const { data, error } = await supabase
         .from('agents')
         .insert(demoData)
@@ -150,19 +157,36 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addAgent = async (agentData: Omit<Agent, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      // Get current user for owner_user_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const dbData = {
+        ...agentToDb(agentData),
+        owner_user_id: user.id
+      };
+
       const { data, error } = await supabase
         .from('agents')
-        .insert([agentToDb(agentData)])
+        .insert([dbData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
+      
       const newAgent = dbToAgent(data);
       setAgents(prev => [newAgent, ...prev]);
       toast.success('Agent added successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding agent:', error);
-      toast.error('Failed to add agent');
+      const errorMsg = error?.message || 'Failed to add agent';
+      toast.error(`Failed to add agent: ${errorMsg}`);
+      throw error;
     }
   };
 
@@ -209,9 +233,16 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const agent = agents.find(a => a.id === id);
     if (agent) {
       try {
+        // Get current user for owner_user_id
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('User not authenticated');
+        }
+
         const duplicatedData = {
           ...agentToDb(agent),
-          name: `${agent.name} (Copy)`
+          name: `${agent.name} (Copy)`,
+          owner_user_id: user.id
         };
         
         const { data, error } = await supabase
@@ -220,13 +251,18 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error details:', error);
+          throw error;
+        }
+        
         const duplicatedAgent = dbToAgent(data);
         setAgents(prev => [duplicatedAgent, ...prev]);
         toast.success('Agent duplicated successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error duplicating agent:', error);
-        toast.error('Failed to duplicate agent');
+        const errorMsg = error?.message || 'Failed to duplicate agent';
+        toast.error(`Failed to duplicate agent: ${errorMsg}`);
       }
     }
   };
@@ -239,6 +275,9 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const imported = JSON.parse(json) as Agent[];
       if (Array.isArray(imported) && imported.every(a => a.id && a.name)) {
+        // Get current user for owner_user_id
+        const { data: { user } } = await supabase.auth.getUser();
+        
         // Clear existing agents and insert imported ones
         const { error: deleteError } = await supabase
           .from('agents')
@@ -247,7 +286,11 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (deleteError) throw deleteError;
 
-        const importData = imported.map(agentToDb);
+        const importData = imported.map(agent => ({
+          ...agentToDb(agent),
+          owner_user_id: user?.id || null
+        }));
+        
         const { data, error } = await supabase
           .from('agents')
           .insert(importData)
