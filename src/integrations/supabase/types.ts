@@ -279,6 +279,7 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          instructions_override: string | null
           is_featured: boolean | null
           language: string[]
           model: string
@@ -287,6 +288,8 @@ export type Database = {
           prompt_id: string | null
           prompt_source: string
           prompt_text: string | null
+          prompt_variables: Json | null
+          prompt_version: string | null
           provider: string | null
           provider_config: Json | null
           rating: number | null
@@ -312,6 +315,7 @@ export type Database = {
           category: string
           created_at?: string
           id?: string
+          instructions_override?: string | null
           is_featured?: boolean | null
           language: string[]
           model?: string
@@ -320,6 +324,8 @@ export type Database = {
           prompt_id?: string | null
           prompt_source: string
           prompt_text?: string | null
+          prompt_variables?: Json | null
+          prompt_version?: string | null
           provider?: string | null
           provider_config?: Json | null
           rating?: number | null
@@ -345,6 +351,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          instructions_override?: string | null
           is_featured?: boolean | null
           language?: string[]
           model?: string
@@ -353,6 +360,8 @@ export type Database = {
           prompt_id?: string | null
           prompt_source?: string
           prompt_text?: string | null
+          prompt_variables?: Json | null
+          prompt_version?: string | null
           provider?: string | null
           provider_config?: Json | null
           rating?: number | null
