@@ -67,7 +67,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     prompt_text: agent.prompt_text,
     prompt_id: agent.prompt_id,
     prompt_version: agent.prompt_version,
-    prompt_variables: agent.prompt_variables,
+    prompt_variables: agent.prompt_variables as any,
     instructions_override: agent.instructions_override,
     voice: agent.voice,
     model: agent.model,

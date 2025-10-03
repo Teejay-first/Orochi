@@ -34,6 +34,13 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "content-type": "application/json" },
     });
   } catch (e) {
+    console.error('Error in livekit-token function:', e);
+    console.error('Error details:', {
+      message: e?.message,
+      stack: e?.stack,
+      agentId: Deno.env.get("AGENT_ID"),
+      livekitUrl: Deno.env.get("LIVEKIT_URL")
+    });
     return new Response(JSON.stringify({ error: e?.message || "token error" }), {
       status: 500,
       headers: { ...corsHeaders, "content-type": "application/json" },
