@@ -175,6 +175,61 @@ export const useAuth = () => {
     }
   };
 
+  const signInWithLocalPassword = async () => {
+    try {
+      // Only allow in local development
+      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      if (!isLocalDev) {
+        return { error: { message: 'Local password authentication is only available in development' } };
+      }
+
+      console.log('🔧 LOCAL DEV: Bypassing Supabase auth, creating mock session...');
+
+      // For local dev, we'll create a mock user that bypasses Supabase entirely
+      // This simulates being authenticated without actually hitting Supabase
+      const mockUser = {
+        id: 'local-dev-' + Date.now(),
+        email: 'dev@localhost',
+        created_at: new Date().toISOString(),
+        app_metadata: {},
+        user_metadata: {
+          full_name: 'Local Dev User',
+          auth_method: 'local_dev',
+        },
+        aud: 'authenticated',
+        role: 'authenticated'
+      } as any;
+
+      const mockSession = {
+        user: mockUser,
+        access_token: 'local-dev-token',
+        refresh_token: 'local-dev-refresh',
+        expires_at: Date.now() + (24 * 60 * 60 * 1000),
+      } as any;
+
+      // Manually set the state to bypass Supabase
+      setUser(mockUser);
+      setSession(mockSession);
+      setUserProfile({
+        user_id: mockUser.id,
+        email: mockUser.email,
+        full_name: 'Local Dev User',
+        avatar_url: null,
+        role: 'user',
+        is_admin: false,
+        is_super_admin: false,
+      });
+
+      console.log('✅ LOCAL DEV: Mock session created successfully');
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('❌ Local password error:', error);
+      return { error: { message: error.message || 'Failed to sign in' } };
+    }
+  };
+
   return {
     user,
     session,
@@ -182,6 +237,7 @@ export const useAuth = () => {
     loading,
     signInWithGoogle,
     signInWithInviteCode,
+    signInWithLocalPassword,
     signOut,
     isAuthenticated: !!user,
     isAdmin: userProfile?.is_admin || false,

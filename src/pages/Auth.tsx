@@ -10,13 +10,14 @@ import { toast } from '@/hooks/use-toast';
 import { Turnstile } from '@marsidev/react-turnstile';
 
 export const Auth: React.FC = () => {
-  const { signInWithGoogle, signInWithInviteCode, isAuthenticated, loading } = useAuth();
+  const { signInWithGoogle, signInWithInviteCode, signInWithLocalPassword, isAuthenticated, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const [inviteCode, setInviteCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string>('');
   const captchaRef = useRef<any>();
-  
+  const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
   const redirectTo = searchParams.get('redirect') || '/';
 
   if (loading) {
@@ -32,7 +33,7 @@ export const Auth: React.FC = () => {
   }
 
   const handleGoogleSignIn = async () => {
-    if (!captchaToken) {
+    if (!isLocalDev && !captchaToken) {
       toast({
         title: "Error",
         description: "Please complete the CAPTCHA verification",
@@ -42,12 +43,12 @@ export const Auth: React.FC = () => {
     }
 
     setIsProcessing(true);
-    const { error } = await signInWithGoogle(captchaToken);
+    const { error } = await signInWithGoogle(isLocalDev ? undefined : captchaToken);
     if (error) {
       console.error('Google sign-in error:', error);
     }
     // Reset CAPTCHA after attempt
-    if (captchaRef.current) {
+    if (captchaRef.current && !isLocalDev) {
       captchaRef.current.reset();
       setCaptchaToken('');
     }
@@ -64,26 +65,66 @@ export const Auth: React.FC = () => {
       return;
     }
 
-    if (!captchaToken) {
+    setIsProcessing(true);
+
+    // Local dev bypass with password 1234 - skip ALL validation
+    if (isLocalDev && inviteCode === '1234') {
+      try {
+        const { error } = await signInWithLocalPassword();
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "✅ Local Dev Access",
+            description: "You're in! Testing Voxie agent...",
+          });
+        }
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err.message || "Failed to sign in",
+          variant: "destructive",
+        });
+      }
+      setIsProcessing(false);
+      return;
+    }
+
+    // Check CAPTCHA only if not local dev
+    if (!isLocalDev && !captchaToken) {
       toast({
         title: "Error",
         description: "Please complete the CAPTCHA verification",
         variant: "destructive",
       });
+      setIsProcessing(false);
       return;
     }
 
-    setIsProcessing(true);
-    const { error } = await signInWithInviteCode(inviteCode, captchaToken);
-    if (error) {
+    // Normal invite code flow
+    try {
+      const { error } = await signInWithInviteCode(inviteCode, isLocalDev ? undefined : captchaToken);
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: err.message || "Failed to sign in",
         variant: "destructive",
       });
     }
-    // Reset CAPTCHA after attempt
-    if (captchaRef.current) {
+
+    // Reset CAPTCHA after attempt (only if not local dev)
+    if (captchaRef.current && !isLocalDev) {
       captchaRef.current.reset();
       setCaptchaToken('');
     }
@@ -102,7 +143,7 @@ export const Auth: React.FC = () => {
         <CardContent className="space-y-4">
           <Button
             onClick={handleGoogleSignIn}
-            disabled={isProcessing || !captchaToken}
+            disabled={isProcessing || (!isLocalDev && !captchaToken)}
             className="w-full"
             size="lg"
           >
@@ -126,7 +167,7 @@ export const Auth: React.FC = () => {
           <div className="space-y-4">
             <Input
               type="text"
-              placeholder="Enter invite code"
+              placeholder={isLocalDev ? "Enter invite code or '1234' for local dev" : "Enter invite code"}
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
               onKeyDown={(e) => {
@@ -137,19 +178,29 @@ export const Auth: React.FC = () => {
               disabled={isProcessing}
             />
             
-            <div className="flex justify-center">
-              <Turnstile
-                ref={captchaRef}
-                siteKey="0x4AAAAAAB1DkiFT9Z0eXpzt"
-                onSuccess={(token) => setCaptchaToken(token)}
-                onError={() => setCaptchaToken('')}
-                onExpire={() => setCaptchaToken('')}
-              />
-            </div>
+            {!isLocalDev && (
+              <div className="flex justify-center">
+                <Turnstile
+                  ref={captchaRef}
+                  siteKey="0x4AAAAAAB1DkiFT9Z0eXpzt"
+                  onSuccess={(token) => setCaptchaToken(token)}
+                  onError={() => setCaptchaToken('')}
+                  onExpire={() => setCaptchaToken('')}
+                />
+              </div>
+            )}
+
+            {isLocalDev && (
+              <div className="flex justify-center py-4">
+                <p className="text-sm text-muted-foreground">
+                  CAPTCHA disabled for local development
+                </p>
+              </div>
+            )}
             
             <Button
               onClick={handleInviteCodeSignIn}
-              disabled={isProcessing || !inviteCode.trim() || !captchaToken}
+              disabled={isProcessing || !inviteCode.trim() || (!isLocalDev && !captchaToken)}
               className="w-full"
               variant="outline"
             >

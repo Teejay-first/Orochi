@@ -260,13 +260,30 @@
   }
 
   .btn-glass-destructive:hover {
-    background: linear-gradient(135deg, 
-      hsl(var(--destructive) / 0.25), 
+    background: linear-gradient(135deg,
+      hsl(var(--destructive) / 0.25),
       hsl(var(--destructive) / 0.15)
     );
-    box-shadow: 
+    box-shadow:
       0 12px 40px 0 rgba(0, 0, 0, 0.3),
       0 0 30px 0 hsl(var(--destructive) / 0.4),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Agent Creation Loading Bar Animation */
+  @keyframes loading-bar {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-loading-bar {
+    animation: loading-bar 2s ease-in-out infinite;
   }
 }

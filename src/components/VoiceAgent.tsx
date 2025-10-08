@@ -1,15 +1,18 @@
 import "@livekit/components-styles";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
   VoiceAssistantControlBar,
-  BarVisualizer,
   useVoiceAssistant,
   ConnectionStateToast,
 } from "@livekit/components-react";
 import { DefaultReconnectPolicy } from "livekit-client";
 import { supabase } from "@/integrations/supabase/client";
+import { AudioReactiveBlob } from "@/components/AudioReactiveBlob";
+import { getRandomFunFact } from "@/data/funFacts";
+import { motion, AnimatePresence } from "framer-motion";
+import handoffSound from "@/assets/mixkit-magic-marimba-2820.wav";
 
 interface VoiceAgentProps {
   room: string;
@@ -94,7 +97,57 @@ export default function VoiceAgent({
 
 function VoiceAgentUI() {
   const { state, audioTrack } = useVoiceAssistant();
-  
+  const [funFact, setFunFact] = useState(getRandomFunFact());
+  const [showHandoffNotification, setShowHandoffNotification] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasPlayedHandoff = useRef(false);
+  const previousState = useRef<string>("");
+
+  // Detect agent handoff: when state transitions from "initializing" to "listening"
+  useEffect(() => {
+    console.log(`🔄 Agent state transition: "${previousState.current}" → "${state}"`);
+
+    if (
+      previousState.current === "initializing" &&
+      state === "listening" &&
+      !hasPlayedHandoff.current
+    ) {
+      console.log("✅ AGENT HANDOFF DETECTED! Playing notification...");
+      hasPlayedHandoff.current = true;
+
+      // Show notification
+      setShowHandoffNotification(true);
+
+      // Play sound
+      if (audioRef.current) {
+        audioRef.current.play().catch(err =>
+          console.warn("Could not play handoff sound:", err)
+        );
+      }
+
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setShowHandoffNotification(false);
+      }, 3000);
+    }
+
+    // Update previous state for next comparison
+    previousState.current = state;
+  }, [state]);
+
+  // Update fun fact every 5 seconds when thinking
+  useEffect(() => {
+    if (state === "thinking") {
+      setFunFact(getRandomFunFact());
+
+      const interval = setInterval(() => {
+        setFunFact(getRandomFunFact());
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [state]);
+
   const getStateColor = (state: any) => {
     switch (state) {
       case "listening": return "text-green-500";
@@ -114,13 +167,50 @@ function VoiceAgentUI() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 p-6">
-      <BarVisualizer state={state} trackRef={audioTrack} barCount={9} />
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{getStateIcon(state)}</span>
-        <p className={`text-sm font-medium ${getStateColor(state)}`}>
-          {!state || state === "disconnected" ? "Ready to chat" : `Agent is ${state}...`}
-        </p>
+    <div className="flex flex-col items-center justify-center gap-6 p-6">
+      {/* Hidden audio element for handoff sound */}
+      <audio ref={audioRef} src={handoffSound} preload="auto" />
+
+      {/* Handoff Notification */}
+      <AnimatePresence>
+        {showHandoffNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="absolute top-8 z-50 px-6 py-3 bg-green-500/20 border border-green-500/40 rounded-lg backdrop-blur-sm"
+          >
+            <p className="text-sm text-green-400 font-medium flex items-center gap-2">
+              <span className="text-lg">✨</span>
+              Agent is ready for handoff
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Audio-Reactive Morphing Blob - Main Visual */}
+      <div className="w-full max-w-2xl h-96">
+        <AudioReactiveBlob audioTrack={audioTrack} state={state} />
+      </div>
+
+      {/* State Display */}
+      <div className="flex flex-col items-center gap-3 min-h-[60px]">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{getStateIcon(state)}</span>
+          <p className={`text-sm font-medium ${getStateColor(state)}`}>
+            {!state || state === "disconnected" ? "Ready to chat" : `Agent is ${state}...`}
+          </p>
+        </div>
+
+        {/* Fun Fact Display when Thinking */}
+        {state === "thinking" && (
+          <div className="mt-2 px-6 py-3 bg-blue-500/10 border border-blue-500/30 rounded-lg max-w-lg animate-pulse">
+            <p className="text-xs text-blue-300 text-center italic">
+              {funFact}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
