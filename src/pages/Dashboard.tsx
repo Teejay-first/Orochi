@@ -13,21 +13,31 @@ import { KnowledgeBase } from "@/components/dashboard/KnowledgeBase";
 import { PhoneNumbers } from "@/components/dashboard/PhoneNumbers";
 import { DeployChannels } from "@/components/dashboard/DeployChannels";
 import { PopularUseCases } from "@/components/dashboard/PopularUseCases";
+import { ProviderSettings } from "@/components/dashboard/ProviderSettings";
+import { UsageCost } from "@/components/dashboard/UsageCost";
+import { Tools } from "@/components/dashboard/Tools";
+import { Webhooks } from "@/components/dashboard/Webhooks";
+import { WorkflowManager } from "@/components/dashboard/WorkflowManager";
 
-export type DashboardView = 
-  | "agents" 
+export type DashboardView =
+  | "agents"
+  | "workflows"
   | "sub-agents"
   | "connectors"
   | "self-improvement"
   | "knowledge-base"
+  | "tools"
   | "use-cases"
   | "phone-numbers"
   | "website-widget"
   | "whatsapp"
   | "mobile-app"
   | "api"
-  | "call-history" 
+  | "webhooks"
+  | "usage-cost"
+  | "call-history"
   | "analytics"
+  | "settings"
   | "agent-config";
 
 export const Dashboard = () => {
@@ -38,13 +48,15 @@ export const Dashboard = () => {
     switch (currentView) {
       case "agents":
         return (
-          <AgentDirectory 
+          <AgentDirectory
             onConfigureAgent={(agentId) => {
               setSelectedAgentId(agentId);
               setCurrentView("agent-config");
             }}
           />
         );
+      case "workflows":
+        return <WorkflowManager />;
       case "sub-agents":
         return <SubAgents />;
       case "connectors":
@@ -53,13 +65,15 @@ export const Dashboard = () => {
         return <SelfImprovement />;
       case "agent-config":
         return (
-          <AgentConfiguration 
+          <AgentConfiguration
             agentId={selectedAgentId}
             onBack={() => setCurrentView("agents")}
           />
         );
       case "knowledge-base":
         return <KnowledgeBase />;
+      case "tools":
+        return <Tools />;
       case "use-cases":
         return <PopularUseCases />;
       case "phone-numbers":
@@ -68,10 +82,16 @@ export const Dashboard = () => {
       case "mobile-app":
       case "api":
         return <DeployChannels currentChannel={currentView} />;
+      case "webhooks":
+        return <Webhooks />;
+      case "usage-cost":
+        return <UsageCost />;
       case "call-history":
         return <CallHistory />;
       case "analytics":
         return <Analytics />;
+      case "settings":
+        return <ProviderSettings />;
       default:
         return <AgentDirectory onConfigureAgent={() => {}} />;
     }

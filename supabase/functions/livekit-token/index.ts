@@ -9,14 +9,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { room, identity } = await req.json();
+    const { room, identity, agent_id } = await req.json();
 
     const LIVEKIT_URL = Deno.env.get("LIVEKIT_URL")!;
     const LIVEKIT_API_KEY = Deno.env.get("LIVEKIT_API_KEY")!;
     const LIVEKIT_API_SECRET = Deno.env.get("LIVEKIT_API_SECRET")!;
-    const AGENT_ID = Deno.env.get("AGENT_ID") ?? "CA_pGYsjHJZSmxC";
 
-    console.log(`Connecting to LiveKit agent: ${AGENT_ID}`);
+    // Use the provided agent_id from the request, or fall back to env variable
+    const AGENT_ID = agent_id ?? Deno.env.get("AGENT_ID") ?? "CA_pGYsjHJZSmxC";
+
+    console.log(`Connecting to LiveKit agent: ${AGENT_ID} (from request: ${agent_id})`);
 
     // 1) Create token for the web client
     const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {

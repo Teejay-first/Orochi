@@ -2,38 +2,35 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AgentProvider } from "@/contexts/AgentContext";
-import { RequireAdmin } from "@/components/RequireAdmin";
-import { Home } from "./pages/Home";
-import { AgentSession } from "./pages/AgentSession";
-
-import { Admin } from "./pages/Admin";
-import { Auth } from "./pages/Auth";
+import { ProviderProvider } from "@/contexts/ProviderContext";
 import { Dashboard } from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
+import { Start } from "./pages/Start";
+import { Landing } from "./pages/Landing";
+import { Diagnostic } from "./pages/Diagnostic";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AgentProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/agent/:id" element={<AgentSession />} />
-            
-            <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AgentProvider>
+    <ProviderProvider>
+      <AgentProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/start" element={<Start />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/diagnostic" element={<Diagnostic />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AgentProvider>
+    </ProviderProvider>
   </QueryClientProvider>
 );
 

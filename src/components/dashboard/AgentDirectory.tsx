@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAgents } from "@/contexts/AgentContext";
-import { useNavigate } from "react-router-dom";
-import { Plus, Search, Settings, Pause, Archive, Play, MoreHorizontal } from "lucide-react";
+import { useProvider } from "@/contexts/ProviderContext";
+import { Plus, Search, Settings, Pause, Archive, MoreHorizontal, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -21,89 +20,151 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "@/hooks/use-toast";
+import { LiveStatsWidget } from "./LiveStatsWidget";
+import type { VapiAssistant } from "@/services/vapi/types";
 
 interface AgentDirectoryProps {
   onConfigureAgent: (agentId: string) => void;
 }
 
 export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
-  const { agents, loading } = useAgents();
+  const { getVapiClient } = useProvider();
+  const [assistants, setAssistants] = useState<VapiAssistant[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
 
-  const filteredAgents = agents.filter(agent =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.category.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    loadAssistants();
+  }, []);
+
+  async function loadAssistants() {
+    try {
+      setLoading(true);
+
+      const client = getVapiClient();
+      if (!client) {
+        toast({
+          title: "No Vapi connection",
+          description: "Please connect your Vapi account in Settings",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('✅ Vapi client available, fetching assistants...');
+      const data = await client.listAssistants();
+      console.log('📋 Fetched assistants:', data);
+      console.log('📋 Number of assistants:', data.length);
+      console.log('📋 First assistant:', data[0]);
+
+      setAssistants(data);
+      console.log('✅ State updated with assistants');
+
+      toast({
+        title: "Assistants loaded",
+        description: `Loaded ${data.length} assistant(s) from Vapi`,
+      });
+    } catch (error) {
+      console.error('❌ Failed to load assistants:', error);
+      toast({
+        title: "Failed to load assistants",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+      setAssistants([]);
+    } finally {
+      setLoading(false);
+      console.log('✅ Loading complete');
+    }
+  }
+
+  const filteredAssistants = assistants.filter(assistant =>
+    assistant.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      'deployed': { label: 'Active', variant: 'default' as const },
-      'testing': { label: 'Testing', variant: 'secondary' as const },
-      'draft': { label: 'Draft', variant: 'outline' as const },
-      'paused': { label: 'Paused', variant: 'destructive' as const },
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+  console.log('🎨 Render - assistants state:', assistants);
+  console.log('🎨 Render - filteredAssistants:', filteredAssistants);
+  console.log('🎨 Render - loading:', loading);
+
+  const getStatusBadge = (assistant: VapiAssistant) => {
+    // Vapi assistants don't have explicit status, so we'll use a simple logic
+    return <Badge variant="default">Active</Badge>;
   };
 
-  const getAgentType = (category: string) => {
-    // Map categories to agent types similar to the reference design
-    const typeMap: { [key: string]: string } = {
-      'Customer Support': 'Multi Prompt',
-      'Sales': 'Conversation Flow',
-      'Healthcare': 'Conversation Flow',
-      'Education': 'Multi Prompt',
-      'Finance': 'Conversation Flow',
-      'Legal': 'Multi Prompt',
-    };
-    
-    return typeMap[category] || 'Multi Prompt';
+  const getVoiceProvider = (assistant: VapiAssistant) => {
+    if (!assistant.voice) return 'Default';
+
+    // Check voice provider type
+    if ('provider' in assistant.voice) {
+      return assistant.voice.provider;
+    }
+
+    return 'Custom';
+  };
+
+  const getVoiceName = (assistant: VapiAssistant) => {
+    if (!assistant.voice) return 'Default';
+
+    if ('voiceId' in assistant.voice) {
+      return assistant.voice.voiceId;
+    }
+
+    return 'Default';
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading agents...</div>
+        <div className="text-muted-foreground">Loading Vapi assistants...</div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Live Stats Widget */}
+      <LiveStatsWidget />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">»</span>
-          <h1 className="text-2xl font-semibold">All Agents</h1>
+          <h1 className="text-2xl font-semibold">Vapi Assistants</h1>
+          <Badge variant="outline" className="ml-2">
+            {assistants.length} total
+          </Badge>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search..."
+              placeholder="Search assistants..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64 pl-9"
             />
           </div>
-          <Button variant="outline">Import</Button>
-          <Button onClick={() => navigate('/agent/master-agent-aristocratic')}>
+          <Button variant="outline" onClick={loadAssistants}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+          <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Create an Agent
+            Create Assistant
           </Button>
         </div>
       </div>
 
-      {/* Agents Table */}
+      {/* Assistants Table */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Agent Name</TableHead>
-              <TableHead>Agent Type</TableHead>
+              <TableHead>Assistant Name</TableHead>
+              <TableHead>Model</TableHead>
+              <TableHead>Voice Provider</TableHead>
               <TableHead>Voice</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
@@ -111,45 +172,59 @@ export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAgents.length === 0 ? (
+            {filteredAssistants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No agents found
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? 'No assistants found matching your search' : 'No assistants found. Create your first assistant!'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAgents.map((agent) => (
-                <TableRow key={agent.id}>
+              filteredAssistants.map((assistant) => (
+                <TableRow key={assistant.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full" />
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={agent.avatarUrl} alt={agent.name} />
                         <AvatarFallback>
-                          {agent.name.substring(0, 2).toUpperCase()}
+                          {(assistant.name || 'UN').substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{agent.name}</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{assistant.name || 'Unnamed Assistant'}</span>
+                        {assistant.id && (
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {assistant.id.substring(0, 8)}...
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{getAgentType(agent.category)}</Badge>
+                    <Badge variant="secondary">
+                      {assistant.model?.model || 'gpt-4'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="capitalize">{getVoiceProvider(assistant)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar className="w-6 h-6">
                         <AvatarFallback className="text-xs">
-                          {agent.voice.substring(0, 2).toUpperCase()}
+                          {getVoiceName(assistant).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="capitalize">{agent.voice}</span>
+                      <span className="text-sm">{getVoiceName(assistant)}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {getStatusBadge(agent.status_type || 'draft')}
+                    {getStatusBadge(assistant)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {formatDistanceToNow(new Date(agent.createdAt), { addSuffix: true })}
+                    {assistant.createdAt
+                      ? formatDistanceToNow(new Date(assistant.createdAt), { addSuffix: true })
+                      : 'Unknown'
+                    }
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -159,21 +234,24 @@ export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onConfigureAgent(agent.id)}>
+                        <DropdownMenuItem onClick={() => onConfigureAgent(assistant.id)}>
                           <Settings className="w-4 h-4 mr-2" />
-                          Configure
+                          Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Play className="w-4 h-4 mr-2" />
-                          Test Agent
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Pause className="w-4 h-4 mr-2" />
-                          Pause
+                        <DropdownMenuItem
+                          onClick={() => {
+                            navigator.clipboard.writeText(assistant.id);
+                            toast({
+                              title: "Copied!",
+                              description: "Assistant ID copied to clipboard",
+                            });
+                          }}
+                        >
+                          Copy ID
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
                           <Archive className="w-4 h-4 mr-2" />
-                          Archive
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
