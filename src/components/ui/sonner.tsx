@@ -1,14 +1,27 @@
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
+import { useEffect, useState } from "react";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const [theme, setTheme] = useState<ToasterProps["theme"]>("system");
+
+  useEffect(() => {
+    // Detect system theme preference
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const updateTheme = () => {
+      setTheme(mediaQuery.matches ? "dark" : "light");
+    };
+    
+    updateTheme();
+    mediaQuery.addEventListener("change", updateTheme);
+    
+    return () => mediaQuery.removeEventListener("change", updateTheme);
+  }, []);
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme}
       className="toaster group"
       toastOptions={{
         classNames: {

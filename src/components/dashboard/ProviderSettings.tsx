@@ -175,19 +175,22 @@ export function ProviderSettings() {
             const isActive = activeConnection?.id === connection.id;
 
             return (
-              <Card key={connection.id} className={isActive ? 'ring-2 ring-primary' : ''}>
-                <CardHeader>
+              <Card 
+                key={connection.id} 
+                className={isActive ? 'border-default shadow-system-sm' : ''}
+              >
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="text-3xl">{providerInfo.emoji}</div>
                       <div>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
                           {providerInfo.name}
                           {isActive && (
-                            <Badge variant="default">Active</Badge>
+                            <Badge variant="default" className="text-xs">Active</Badge>
                           )}
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="mt-1">
                           {connection.label || 'Unnamed connection'}
                         </CardDescription>
                       </div>
@@ -207,6 +210,7 @@ export function ProviderSettings() {
                         size="sm"
                         onClick={() => handleTestConnection(connection.id)}
                         disabled={testing === connection.id}
+                        title="Test Connection"
                       >
                         {testing === connection.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -218,45 +222,58 @@ export function ProviderSettings() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleRemoveConnection(connection.id)}
+                        title="Remove Connection"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Private API Key:</span>
-                      <div className="font-mono">
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Private API Key
+                      </div>
+                      <div className="font-mono text-sm text-foreground bg-muted/50 px-2 py-1.5 rounded border border-border">
                         {connection.apiKey.substring(0, 8)}...{connection.apiKey.slice(-4)}
                       </div>
                     </div>
                     {connection.publicKey && (
-                      <div>
-                        <span className="text-muted-foreground">Public API Key:</span>
-                        <div className="font-mono">
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Public API Key
+                        </div>
+                        <div className="font-mono text-sm text-foreground bg-muted/50 px-2 py-1.5 rounded border border-border">
                           {connection.publicKey.substring(0, 8)}...{connection.publicKey.slice(-4)}
                         </div>
                       </div>
                     )}
                     {connection.orgId && (
-                      <div>
-                        <span className="text-muted-foreground">Organization:</span>
-                        <div>{connection.orgId}</div>
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Organization
+                        </div>
+                        <div className="text-sm text-foreground">
+                          {connection.orgId}
+                        </div>
                       </div>
                     )}
-                    <div>
-                      <span className="text-muted-foreground">Last Verified:</span>
-                      <div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Last Verified
+                      </div>
+                      <div className="text-sm text-foreground">
                         {connection.lastVerifiedAt
                           ? formatDistanceToNow(new Date(connection.lastVerifiedAt), { addSuffix: true })
-                          : 'Never'}
+                          : <span className="text-muted-foreground">Never</span>}
                       </div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Added:</span>
-                      <div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Added
+                      </div>
+                      <div className="text-sm text-foreground">
                         {formatDistanceToNow(new Date(connection.createdAt), { addSuffix: true })}
                       </div>
                     </div>
@@ -387,3 +404,4 @@ export function ProviderSettings() {
     </div>
   );
 }
+
