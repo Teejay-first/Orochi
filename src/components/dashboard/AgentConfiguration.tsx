@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useProvider } from "@/contexts/ProviderContext";
-import { ChevronLeft, Save, Code, Phone, PhoneCall, PhoneOff, MessageSquare } from "lucide-react";
+import { ChevronLeft, Save, Code, Phone, PhoneCall, PhoneOff, MessageSquare, Copy, Check } from "lucide-react";
 import Vapi from "@vapi-ai/web";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useScrollspy } from "@/hooks/use-scrollspy";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -83,9 +84,15 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
   const [savingPublicKey, setSavingPublicKey] = useState(false);
 
   const [showRawJson, setShowRawJson] = useState(false);
+  const [jsonCopied, setJsonCopied] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
 
   // Live Agent Tester
   const [liveTesterOpen, setLiveTesterOpen] = useState(false);
+
+  // Scrollspy for navigation
+  const sectionIds = ['section-basic', 'section-model', 'section-voice', 'section-transcriber', 'section-advanced', 'section-tools'];
+  const activeSection = useScrollspy(sectionIds, 120);
 
   // Available options from Vapi docs
   const modelProviders = [
@@ -704,74 +711,261 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Left: Back button and Assistant Info */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={onBack}>
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12">
+            <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
               <AvatarFallback>
                 {(assistant.name || 'UN').substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-semibold">{assistant.name || 'Unnamed Assistant'}</h1>
-              <p className="text-sm text-muted-foreground font-mono">{assistant.id}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold sm:text-2xl">{assistant.name || 'Unnamed Assistant'}</h1>
+                <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Active</Badge>
+              </div>
+              <div className="flex items-center gap-1.5 group">
+                <p className="text-xs text-muted-foreground font-mono sm:text-sm">{assistant.id}</p>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(assistant.id);
+                      setIdCopied(true);
+                      toast({
+                        title: "Copied!",
+                        description: "Assistant ID copied to clipboard",
+                      });
+                      setTimeout(() => setIdCopied(false), 2000);
+                    } catch (error) {
+                      toast({
+                        title: "Failed to copy",
+                        description: "Could not copy to clipboard",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
+                  title="Copy ID"
+                >
+                  {idCopied ? (
+                    <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowRawJson(!showRawJson)}>
+        {/* Right: Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Developer Tools - Hidden on smaller screens */}
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowRawJson(true)}
+            className="hidden md:flex"
+          >
             <Code className="w-4 h-4 mr-2" />
-            {showRawJson ? 'Hide' : 'Show'} Raw JSON
+            Show JSON
           </Button>
-          <Button variant="outline" onClick={() => setCallDialogOpen(true)}>
-            <Phone className="w-4 h-4 mr-2" />
-            Test Call
-          </Button>
-          <Button variant="default" onClick={() => {
-            console.log('🧪 Live Test button clicked, opening tester...');
-            setLiveTesterOpen(true);
-          }}>
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Live Test
-          </Button>
-          <Badge variant="default">Active</Badge>
-          <Button onClick={handleSave}>
+          
+          {/* Testing Actions - Grouped with visual separator */}
+          <div className="flex items-center gap-2 border-r border-border pr-2 mr-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setCallDialogOpen(true)}
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Test Call</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                console.log('🧪 Live Test button clicked, opening tester...');
+                setLiveTesterOpen(true);
+              }}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Live Test</span>
+            </Button>
+          </div>
+
+          {/* Primary Action */}
+          <Button onClick={handleSave} size="sm">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
         </div>
       </div>
 
-      {/* Raw JSON View */}
-      {showRawJson && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Raw Vapi Response</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-muted p-4 rounded-lg text-xs overflow-auto max-h-96">
+      {/* Raw JSON Modal */}
+      <Dialog open={showRawJson} onOpenChange={setShowRawJson}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="relative pr-10">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <DialogTitle>Raw Vapi Response</DialogTitle>
+                <DialogDescription>
+                  Complete JSON response from the Vapi API for this assistant
+                </DialogDescription>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    const jsonString = JSON.stringify(assistant, null, 2);
+                    await navigator.clipboard.writeText(jsonString);
+                    setJsonCopied(true);
+                    toast({
+                      title: "Copied!",
+                      description: "JSON copied to clipboard",
+                    });
+                    setTimeout(() => setJsonCopied(false), 2000);
+                  } catch (error) {
+                    toast({
+                      title: "Failed to copy",
+                      description: "Could not copy to clipboard",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="p-1.5 hover:bg-muted rounded transition-colors shrink-0 mt-1"
+                title="Copy JSON"
+              >
+                {jsonCopied ? (
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                ) : (
+                  <Copy className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto min-h-0">
+            <pre className="bg-muted p-4 rounded-lg text-xs whitespace-pre-wrap break-words overflow-x-auto">
               {JSON.stringify(assistant, null, 2)}
             </pre>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <Tabs defaultValue="basic">
-        <TabsList>
-          <TabsTrigger value="basic">Basic</TabsTrigger>
-          <TabsTrigger value="model">Model</TabsTrigger>
-          <TabsTrigger value="voice">Voice</TabsTrigger>
-          <TabsTrigger value="transcriber">Transcriber</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
-          <TabsTrigger value="tools">Tools & Knowledge</TabsTrigger>
-        </TabsList>
+      {/* Sticky Navigation Tabs */}
+      <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+        <nav className="flex h-auto rounded-none gap-0 p-0 bg-transparent">
+          <a
+            href="#section-basic"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('section-basic')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className={cn(
+              "relative rounded-none py-2 px-4 text-sm font-medium transition-colors",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+              "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              activeSection === 'section-basic'
+                ? "bg-transparent text-foreground shadow-none after:bg-primary"
+                : "text-muted-foreground after:bg-transparent"
+            )}
+          >
+            Basic
+          </a>
+          <a
+            href="#section-model"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('section-model')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className={cn(
+              "relative rounded-none py-2 px-4 text-sm font-medium transition-colors",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+              "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              activeSection === 'section-model'
+                ? "bg-transparent text-foreground shadow-none after:bg-primary"
+                : "text-muted-foreground after:bg-transparent"
+            )}
+          >
+            Model
+          </a>
+          <a
+            href="#section-voice"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('section-voice')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className={cn(
+              "relative rounded-none py-2 px-4 text-sm font-medium transition-colors",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+              "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              activeSection === 'section-voice'
+                ? "bg-transparent text-foreground shadow-none after:bg-primary"
+                : "text-muted-foreground after:bg-transparent"
+            )}
+          >
+            Voice
+          </a>
+          <a
+            href="#section-transcriber"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('section-transcriber')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className={cn(
+              "relative rounded-none py-2 px-4 text-sm font-medium transition-colors",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+              "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              activeSection === 'section-transcriber'
+                ? "bg-transparent text-foreground shadow-none after:bg-primary"
+                : "text-muted-foreground after:bg-transparent"
+            )}
+          >
+            Transcriber
+          </a>
+          <a
+            href="#section-advanced"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('section-advanced')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className={cn(
+              "relative rounded-none py-2 px-4 text-sm font-medium transition-colors",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+              "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              activeSection === 'section-advanced'
+                ? "bg-transparent text-foreground shadow-none after:bg-primary"
+                : "text-muted-foreground after:bg-transparent"
+            )}
+          >
+            Advanced
+          </a>
+          <a
+            href="#section-tools"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('section-tools')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className={cn(
+              "relative rounded-none py-2 px-4 text-sm font-medium transition-colors",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5",
+              "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              activeSection === 'section-tools'
+                ? "bg-transparent text-foreground shadow-none after:bg-primary"
+                : "text-muted-foreground after:bg-transparent"
+            )}
+          >
+            Tools & Knowledge
+          </a>
+        </nav>
+      </div>
 
-        <TabsContent value="basic" className="space-y-4">
+      {/* Sections */}
+      <section id="section-basic" className="space-y-4 scroll-mt-20">
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
@@ -802,9 +996,9 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="model" className="space-y-4">
+      <section id="section-model" className="space-y-4 scroll-mt-20">
           <Card>
             <CardHeader>
               <CardTitle>Model Configuration</CardTitle>
@@ -873,9 +1067,9 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="voice" className="space-y-4">
+      <section id="section-voice" className="space-y-4 scroll-mt-20">
           <Card>
             <CardHeader>
               <CardTitle>Voice Configuration</CardTitle>
@@ -923,9 +1117,9 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="transcriber" className="space-y-4">
+      <section id="section-transcriber" className="space-y-4 scroll-mt-20">
           <Card>
             <CardHeader>
               <CardTitle>Transcriber Configuration</CardTitle>
@@ -945,9 +1139,9 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="advanced" className="space-y-4">
+      <section id="section-advanced" className="space-y-4 scroll-mt-20">
           <Card>
             <CardHeader>
               <CardTitle>Advanced Settings</CardTitle>
@@ -993,9 +1187,9 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+      </section>
 
-        <TabsContent value="tools" className="space-y-4">
+      <section id="section-tools" className="space-y-4 scroll-mt-20">
           <Card>
             <CardHeader>
               <CardTitle>Tools & Knowledge Base</CardTitle>
@@ -1154,8 +1348,7 @@ export function AgentConfiguration({ agentId, onBack }: AgentConfigurationProps)
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+      </section>
 
       {/* Test Call Dialog */}
       <Dialog open={callDialogOpen} onOpenChange={setCallDialogOpen}>

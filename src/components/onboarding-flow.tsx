@@ -103,7 +103,7 @@ export function OnboardingFlow() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between border-t bg-muted/30 px-8 py-4">
+          <div className="flex items-center justify-between border-t border-border bg-card px-8 py-4">
             <Button variant="ghost" onClick={handleBack} disabled={step === 1} className="gap-2">
               <ChevronLeft className="h-4 w-4" />
               Back
