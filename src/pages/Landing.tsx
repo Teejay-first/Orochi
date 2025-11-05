@@ -21,7 +21,7 @@ export function Landing() {
   }, [connections, loading, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
         <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary mb-4" />
         <p className="text-muted-foreground">Loading VoxHive...</p>

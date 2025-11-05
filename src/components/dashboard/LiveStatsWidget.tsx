@@ -32,7 +32,7 @@ export function LiveStatsWidget() {
 
   if (isLoading) {
     return (
-      <Card className="border-primary/20 bg-primary/5">
+      <Card className="border-border bg-card">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
@@ -45,43 +45,43 @@ export function LiveStatsWidget() {
   if (!stats) return null;
 
   return (
-    <Card className="border-primary/20 bg-primary/5">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          Live Usage Monitor
-          <Badge variant="outline" className="ml-auto text-xs">Updates every 5s</Badge>
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+          <span>Live Usage Monitor</span>
+          <Badge variant="outline" className="ml-auto text-xs font-normal">Updates every 5s</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Activity className="w-3 h-3" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Activity className="w-3.5 h-3.5" />
               Active Calls
             </div>
-            <div className="text-2xl font-bold">{stats.active_calls}</div>
+            <div className="text-2xl font-semibold text-foreground">{stats.active_calls}</div>
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Phone className="w-3 h-3" />
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Phone className="w-3.5 h-3.5" />
               Calls Today
             </div>
-            <div className="text-2xl font-bold">{stats.total_calls_today}</div>
+            <div className="text-2xl font-semibold text-foreground">{stats.total_calls_today}</div>
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <DollarSign className="w-3 h-3" />
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <DollarSign className="w-3.5 h-3.5" />
               Spent Today
             </div>
-            <div className="text-2xl font-bold">${stats.cost_today.toFixed(2)}</div>
+            <div className="text-2xl font-semibold text-foreground">${stats.cost_today.toFixed(2)}</div>
           </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Coins className="w-3 h-3" />
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Coins className="w-3.5 h-3.5" />
               Tokens Today
             </div>
-            <div className="text-2xl font-bold">{stats.total_tokens_today.toLocaleString()}</div>
+            <div className="text-2xl font-semibold text-foreground">{stats.total_tokens_today.toLocaleString()}</div>
           </div>
         </div>
       </CardContent>

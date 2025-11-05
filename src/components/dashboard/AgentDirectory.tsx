@@ -128,15 +128,14 @@ export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">»</span>
-          <h1 className="text-2xl font-semibold">Vapi Assistants</h1>
-          <Badge variant="outline" className="ml-2">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold text-foreground">Assistants</h1>
+          <Badge variant="outline" className="text-xs">
             {assistants.length} total
           </Badge>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -146,11 +145,11 @@ export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
               className="w-64 pl-9"
             />
           </div>
-          <Button variant="outline" onClick={loadAssistants}>
+          <Button variant="outline" onClick={loadAssistants} size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button>
+          <Button size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Create Assistant
           </Button>
@@ -158,78 +157,78 @@ export function AgentDirectory({ onConfigureAgent }: AgentDirectoryProps) {
       </div>
 
       {/* Assistants Table */}
-      <div className="border rounded-lg">
+      <div className="border border-border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Assistant Name</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Voice Provider</TableHead>
-              <TableHead>Voice</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+            <TableRow className="border-b border-border">
+              <TableHead className="h-12">Assistant Name</TableHead>
+              <TableHead className="h-12">Model</TableHead>
+              <TableHead className="h-12">Voice Provider</TableHead>
+              <TableHead className="h-12">Voice</TableHead>
+              <TableHead className="h-12">Status</TableHead>
+              <TableHead className="h-12">Created</TableHead>
+              <TableHead className="h-12 w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAssistants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   {searchQuery ? 'No assistants found matching your search' : 'No assistants found. Create your first assistant!'}
                 </TableCell>
               </TableRow>
             ) : (
               filteredAssistants.map((assistant) => (
-                <TableRow key={assistant.id}>
-                  <TableCell>
+                <TableRow key={assistant.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                  <TableCell className="py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback>
+                      <div className="w-2 h-2 bg-success rounded-full shrink-0" />
+                      <Avatar className="w-8 h-8 shrink-0">
+                        <AvatarFallback className="text-xs">
                           {(assistant.name || 'UN').substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{assistant.name || 'Unnamed Assistant'}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium text-sm text-foreground truncate">{assistant.name || 'Unnamed Assistant'}</span>
                         {assistant.id && (
-                          <span className="text-xs text-muted-foreground font-mono">
+                          <span className="text-xs text-muted-foreground font-mono truncate">
                             {assistant.id.substring(0, 8)}...
                           </span>
                         )}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
+                  <TableCell className="py-4">
+                    <Badge variant="secondary" className="text-xs">
                       {assistant.model?.model || 'gpt-4'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <span className="capitalize">{getVoiceProvider(assistant)}</span>
+                  <TableCell className="py-4">
+                    <span className="text-sm capitalize text-foreground">{getVoiceProvider(assistant)}</span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
+                      <Avatar className="w-6 h-6 shrink-0">
                         <AvatarFallback className="text-xs">
                           {getVoiceName(assistant).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm">{getVoiceName(assistant)}</span>
+                      <span className="text-sm text-foreground truncate">{getVoiceName(assistant)}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     {getStatusBadge(assistant)}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="py-4 text-sm text-muted-foreground">
                     {assistant.createdAt
                       ? formatDistanceToNow(new Date(assistant.createdAt), { addSuffix: true })
                       : 'Unknown'
                     }
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
